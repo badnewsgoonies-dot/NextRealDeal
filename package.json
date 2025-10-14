@@ -1,0 +1,47 @@
+{
+  "name": "ts-game-project",
+  "version": "0.1.0",
+  "description": "Turn-based tactical game with deterministic simulation",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "circular": "madge --circular --extensions ts src/",
+    "deps": "depcruise --config .dependency-cruiser.cjs src/",
+    "ci": "npm run lint && npm run circular && npm run deps && npm run test:coverage",
+    "perf": "tsx scripts/perf.ts",
+    "gen": "plop"
+  },
+  "keywords": [
+    "game",
+    "typescript",
+    "tactical"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pure-rand": "^6.1.0",
+    "valibot": "^0.42.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.10",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "@vitest/coverage-v8": "^2.1.9",
+    "dependency-cruiser": "^16.10.4",
+    "eslint": "^9.37.0",
+    "fast-check": "^3.23.2",
+    "madge": "^8.0.0",
+    "plop": "^4.0.4",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

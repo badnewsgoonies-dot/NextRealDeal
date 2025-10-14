@@ -1,0 +1,45 @@
+import { describe, test, expect, beforeEach } from 'vitest';
+import { {{pascalCase name}}Manager } from '../../src/systems/{{pascalCase name}}Manager.js';
+import { makeRng } from '../../src/util/Rng.js';
+import { makeLogger } from '../../src/util/Logger.js';
+
+describe('{{pascalCase name}}Manager', () => {
+  let manager: {{pascalCase name}}Manager;
+  let rng: ReturnType<typeof makeRng>;
+  let logger: ReturnType<typeof makeLogger>;
+
+  beforeEach(() => {
+    rng = makeRng(12345);
+    logger = makeLogger({ enabled: false });
+    manager = new {{pascalCase name}}Manager(
+      { name: '{{pascalCase name}}' },
+      rng,
+      logger
+    );
+  });
+
+  test('initializes successfully', async () => {
+    const result = await manager.initialize();
+    expect(result.ok).toBe(true);
+  });
+
+  test('updates without errors', async () => {
+    await manager.initialize();
+    const result = await manager.update(16.67);
+    expect(result.ok).toBe(true);
+  });
+
+  test('resets successfully', async () => {
+    await manager.initialize();
+    const result = await manager.reset();
+    expect(result.ok).toBe(true);
+  });
+
+  test('disposes cleanly', async () => {
+    await manager.initialize();
+    await expect(manager.dispose()).resolves.not.toThrow();
+  });
+
+  // TODO: Add specific tests
+});
+

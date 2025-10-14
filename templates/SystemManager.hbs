@@ -1,0 +1,52 @@
+/*
+ * {{pascalCase name}}Manager: TODO description
+ */
+
+import { SystemTemplate, type SystemConfig } from '../core/SystemTemplate.js';
+import type { IRng } from '../util/Rng.js';
+import type { ILogger } from '../util/Logger.js';
+
+export interface I{{pascalCase name}}Manager {
+  // TODO: Define public interface
+}
+
+interface {{pascalCase name}}Config extends SystemConfig {
+  // TODO: Add config options
+}
+
+export class {{pascalCase name}}Manager extends SystemTemplate implements I{{pascalCase name}}Manager {
+  private readonly rng: IRng;
+  private readonly logger: ILogger;
+
+  constructor(
+    config: {{pascalCase name}}Config,
+    rng: IRng,
+    logger: ILogger
+  ) {
+    super(config);
+    this.rng = rng.fork('{{camelCase name}}');
+    this.logger = logger.child({ system: '{{pascalCase name}}' });
+  }
+
+  protected async onInitialize(): Promise<void> {
+    this.logger.info('Initializing {{pascalCase name}}Manager');
+    // TODO: Implement initialization
+  }
+
+  protected async onUpdate(deltaTime: number): Promise<void> {
+    // TODO: Implement update loop
+  }
+
+  protected async onReset(): Promise<void> {
+    this.logger.info('Resetting {{pascalCase name}}Manager');
+    // TODO: Implement reset
+  }
+
+  protected async onDispose(): Promise<void> {
+    this.logger.info('Disposing {{pascalCase name}}Manager');
+    // TODO: Implement cleanup
+  }
+
+  // TODO: Implement public methods
+}
+
