@@ -212,4 +212,5 @@ function loadConfig(path: string): Result<Config, Error> {
 ## Update Log
 
 - **2025-10-14**: Created document, documented RNG fork bug fix
+- **2025-10-14**: Added RNG regression tests, discovered and fixed sequential fork independence bug
 

@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">25.71% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/35</span>
+                <span class='fraction'>9/35</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">20% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>1/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">25.71% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/35</span>
+                <span class='fraction'>9/35</span>
             </div>
         
             
@@ -130,26 +130,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -159,6 +144,21 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -169,11 +169,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/*
  * AsyncQueue: Serializes async operations to prevent race conditions.
@@ -186,11 +186,11 @@ export interface IAsyncQueue {
   size(): number;
 }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export const makeAsyncQueue = (): IAsyncQueue =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  const queue: Array&lt;() =&gt; Promise&lt;void&gt;&gt; = [];</span>
-<span class="cstat-no" title="statement not covered" >  let running = false;</span>
+export const makeAsyncQueue = (): IAsyncQueue =&gt; {
+  const queue: Array&lt;() =&gt; Promise&lt;void&gt;&gt; = [];
+  let running = false;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const processQueue = async (): Promise&lt;void&gt; =&gt; {</span>
+  const processQueue = <span class="fstat-no" title="function not covered" >async (): Promise&lt;void&gt; =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (running || queue.length === 0) return;</span>
 <span class="cstat-no" title="statement not covered" >    running = true;</span>
 &nbsp;
@@ -209,7 +209,7 @@ export interface IAsyncQueue {
 <span class="cstat-no" title="statement not covered" >    running = false;</span>
 <span class="cstat-no" title="statement not covered" >  };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const enqueue = &lt;T&gt;(task: () =&gt; Promise&lt;T&gt;): Promise&lt;T&gt; =&gt; {</span>
+  const enqueue = <span class="fstat-no" title="function not covered" >&lt;T&gt;(task: () =&gt; Promise&lt;T&gt;): Promise&lt;T&gt; =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    return new Promise&lt;T&gt;((resolve, reject) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      const wrappedTask = async (): Promise&lt;void&gt; =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        try {</span>
@@ -225,11 +225,11 @@ export interface IAsyncQueue {
 <span class="cstat-no" title="statement not covered" >    });</span>
 <span class="cstat-no" title="statement not covered" >  };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const isEmpty = (): boolean =&gt; queue.length === 0 &amp;&amp; !running;</span>
-<span class="cstat-no" title="statement not covered" >  const size = (): number =&gt; queue.length;</span>
+  const isEmpty = <span class="fstat-no" title="function not covered" >(): boolean =&gt; queue.length === 0 &amp;&amp; !running;</span>
+  const size = <span class="fstat-no" title="function not covered" >(): number =&gt; queue.length;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return { enqueue, isEmpty, size };</span>
-<span class="cstat-no" title="statement not covered" >};</span>
+  return { enqueue, isEmpty, size };
+};
 &nbsp;
 &nbsp;</pre></td></tr></table></pre>
 
@@ -238,7 +238,7 @@ export interface IAsyncQueue {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-14T23:34:35.402Z
+                at 2025-10-14T23:53:18.219Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

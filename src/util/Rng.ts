@@ -55,8 +55,9 @@ const makeFromGen = (gen: Gen, meta: { seed: number; forks: number; label?: stri
 
   const fork = (childLabel?: string): IRng => {
     const childGen = g.jump();  // ✅ CRITICAL FIX: Use jumped generator, not original seed
+    g = childGen;  // Advance parent state so next fork gets different stream
     forks += 1;
-    return makeFromGen(childGen, { seed, forks: 0, label: childLabel });
+    return makeFromGen(g.jump(), { seed, forks: 0, label: childLabel });
   };
 
   const describe = (): { seed: number; forks: number; label?: string } => ({ seed, forks, label });

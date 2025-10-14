@@ -1,3 +1,4 @@
+/** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
   forbidden: [
     {
@@ -9,20 +10,24 @@ module.exports = {
     {
       name: 'no-orphans',
       severity: 'warn',
-      from: { orphan: true, pathNot: ['\\.test\\.ts$', '\\.spec\\.ts$'] },
+      comment: 'Warn about orphaned modules (except tests and utils in Phase 0)',
+      from: {
+        orphan: true,
+        pathNot: ['\\.test\\.ts$', '\\.spec\\.ts$', '^src/util/'],
+      },
       to: {},
     },
     {
       name: 'util-cannot-import-core-or-systems',
       severity: 'error',
       from: { path: '^src/util/' },
-      to: { path: '^src/(core|systems)/' },
+      to: { path: '^src/(core|systems|map)/' },
     },
     {
       name: 'core-cannot-import-systems',
       severity: 'error',
       from: { path: '^src/core/' },
-      to: { path: '^src/systems/' },
+      to: { path: '^src/(systems|map)/' },
     },
   ],
   options: {

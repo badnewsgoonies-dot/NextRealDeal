@@ -17,7 +17,15 @@ export default [
     },
     rules: {
       'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'complexity': ['warn', 12],
+      'no-restricted-properties': [
+        'error',
+        { object: 'Math', property: 'random', message: 'Use IRng instead.' },
+      ],
+      '@typescript-eslint/consistent-type-imports': [
+        'warn',
+        { fixStyle: 'inline-type-imports' },
+      ],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/explicit-function-return-type': [
         'error',
@@ -28,10 +36,17 @@ export default [
       '@typescript-eslint/await-thenable': 'error',
       'no-throw-literal': 'error',
       'prefer-const': 'error',
+      'no-console': 'error',
+    },
+  },
+  // Allow console in Logger and scripts
+  {
+    files: ['src/util/Logger.ts', 'scripts/**/*.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
   {
-    ignores: ['dist/**', 'node_modules/**', '*.cjs', '*.config.ts', 'coverage/**'],
+    ignores: ['dist/**', 'node_modules/**', '*.cjs', '*.config.ts', '*.config.js', 'coverage/**'],
   },
 ];
-

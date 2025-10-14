@@ -80,3 +80,84 @@ export interface Deserializable<T, TData> {
   deserialize(data: TData): Result<T, Error>;
 }
 
+/**
+ * Map System Types
+ */
+
+/**
+ * Tile types for map generation
+ * 0 = floor (walkable)
+ * 1 = wall (impassable)
+ * 2 = water (impassable)
+ * 3 = door (passable for connectivity)
+ * 4 = spawn (walkable, player start)
+ * 5 = exit (walkable, level goal)
+ */
+export enum TileType {
+  Floor = 0,
+  Wall = 1,
+  Water = 2,
+  Door = 3,
+  Spawn = 4,
+  Exit = 5,
+}
+
+/**
+ * Map generation configuration
+ */
+export interface MapGenConfig {
+  readonly width: number;  // Even number in [16..128]
+  readonly height: number; // Even number in [16..128]
+  readonly minRoomSize?: number;
+  readonly maxRoomSize?: number;
+  readonly extraLoopsPct?: number; // 0-100, percentage of extra connectors for loops
+  readonly algorithm?: 'bsp' | 'cellular' | 'drunkard'; // Future extensibility
+}
+
+/**
+ * Room data for BSP generation
+ */
+export interface Room {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * Connector between rooms
+ */
+export interface Connector {
+  readonly from: Position;
+  readonly to: Position;
+  readonly isExtra: boolean; // true if added for loops
+}
+
+/**
+ * Generated map data
+ */
+export interface MapData {
+  readonly width: number;
+  readonly height: number;
+  readonly tiles: Uint8Array; // Flattened 2D array, row-major order
+  readonly rooms: readonly Room[];
+  readonly connectors: readonly Connector[];
+  readonly spawn: Position;
+  readonly exit: Position;
+  readonly seed: number;
+  readonly algorithm: string;
+}
+
+/**
+ * Map System interface
+ */
+export interface IMapSystem {
+  generate(config: MapGenConfig, signal?: AbortSignal): Promise<Result<MapData, string>>;
+  getTile(data: MapData, x: number, y: number): TileType | undefined;
+  setTile(data: MapData, x: number, y: number, tile: TileType): MapData;
+  isWalkable(tile: TileType): boolean;
+  isConnected(data: MapData): boolean;
+  serialize(data: MapData): string;
+  deserialize(json: string): Result<MapData, string>;
+}
+
