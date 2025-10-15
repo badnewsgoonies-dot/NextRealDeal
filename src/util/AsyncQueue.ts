@@ -5,6 +5,7 @@
 
 export interface IAsyncQueue {
   enqueue<T>(task: () => Promise<T>): Promise<T>;
+  run<T>(fn: () => Promise<T>, opts?: { signal?: AbortSignal }): Promise<T>;
   isEmpty(): boolean;
   size(): number;
   pending: number; // Number of tasks currently executing (0 or 1)
@@ -35,6 +36,20 @@ export class AsyncQueue implements IAsyncQueue {
     );
 
     return p;
+  }
+
+  public run<T>(fn: () => Promise<T>, opts: { signal?: AbortSignal } = {}): Promise<T> {
+    const { signal } = opts;
+    if (signal?.aborted) {
+      return Promise.reject(Object.assign(new Error('Operation aborted'), { name: 'AbortError' }));
+    }
+
+    return this.enqueue(async () => {
+      if (signal?.aborted) {
+        throw Object.assign(new Error('Operation aborted'), { name: 'AbortError' });
+      }
+      return await fn();
+    });
   }
 
   public async drain(): Promise<void> {
