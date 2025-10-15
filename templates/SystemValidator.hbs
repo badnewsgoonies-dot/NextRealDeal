@@ -1,0 +1,14 @@
+/*
+ * Validator for {{pascalCase name}}Manager data.
+ */
+
+import * as v from 'valibot';
+
+export const {{pascalCase name}}DataSchema = v.object({
+  // TODO: Define schema
+  id: v.string(),
+});
+
+export type {{pascalCase name}}DataInput = v.InferInput<typeof {{pascalCase name}}DataSchema>;
+export type {{pascalCase name}}DataOutput = v.InferOutput<typeof {{pascalCase name}}DataSchema>;
+
