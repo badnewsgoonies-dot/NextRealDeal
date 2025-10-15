@@ -17,15 +17,18 @@ const fork = (label?: string): IRng => {
 };
 ```
 
-**Fix**: Use generator's `jump()` method for proper stream splitting:
+**Fix**: Use generator's `jump()` method AND advance parent state:
 ```ts
 // ✅ CORRECT
 const fork = (childLabel?: string): IRng => {
-  const childGen = g.jump();  // Advance to independent sub-stream
+  const childGen = g.jump();  // Jump to independent sub-stream
+  g = childGen;  // Advance parent state so next fork gets different stream
   forks += 1;
-  return makeFromGen(childGen, { seed, forks: 0, label: childLabel });
+  return makeFromGen(g.jump(), { seed, forks: 0, label: childLabel });
 };
 ```
+
+**Critical Detail**: Simply calling `g.jump()` once isn't enough - the parent generator must be advanced with `g = childGen` to ensure sequential forks produce different streams.
 
 **Why It Matters**: Systems need independent random streams. Map generation shouldn't affect battle outcomes just because they share a root seed.
 

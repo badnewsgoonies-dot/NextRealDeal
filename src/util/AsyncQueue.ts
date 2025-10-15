@@ -7,6 +7,7 @@ export interface IAsyncQueue {
   enqueue<T>(task: () => Promise<T>): Promise<T>;
   isEmpty(): boolean;
   size(): number;
+  pending: number; // Number of tasks waiting to execute
 }
 
 export const makeAsyncQueue = (): IAsyncQueue => {
@@ -51,6 +52,13 @@ export const makeAsyncQueue = (): IAsyncQueue => {
   const isEmpty = (): boolean => queue.length === 0 && !running;
   const size = (): number => queue.length;
 
-  return { enqueue, isEmpty, size };
+  return { 
+    enqueue, 
+    isEmpty, 
+    size,
+    get pending(): number {
+      return queue.length;
+    }
+  };
 };
 

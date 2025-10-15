@@ -14,6 +14,15 @@ export const PositionSchema = v.object({
 });
 
 /**
+ * Tile schema
+ */
+export const TileSchema = v.object({
+  x: v.pipe(v.number(), v.integer()),
+  y: v.pipe(v.number(), v.integer()),
+  t: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(5)),
+});
+
+/**
  * Room schema
  */
 export const RoomSchema = v.object({
@@ -50,6 +59,7 @@ export const MapGenConfigSchema = v.object({
     v.maxValue(128),
     v.custom((val) => val % 2 === 0, 'Height must be even')
   ),
+  seed: v.number(),
   minRoomSize: v.optional(
     v.pipe(v.number(), v.integer(), v.minValue(3), v.maxValue(20)),
     5
@@ -77,11 +87,7 @@ export type MapGenConfigOutput = v.InferOutput<typeof MapGenConfigSchema>;
 export const MapDataSchema = v.object({
   width: v.pipe(v.number(), v.integer(), v.minValue(16), v.maxValue(128)),
   height: v.pipe(v.number(), v.integer(), v.minValue(16), v.maxValue(128)),
-  tiles: v.pipe(
-    v.array(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(5))),
-    v.minLength(16 * 16),
-    v.maxLength(128 * 128)
-  ),
+  tiles: v.array(TileSchema),
   rooms: v.array(RoomSchema),
   connectors: v.array(ConnectorSchema),
   spawn: PositionSchema,
@@ -109,7 +115,7 @@ export const TileTypeSchema = v.pipe(
 export const validateMapDimensions = (data: {
   width: number;
   height: number;
-  tiles: number[] | Uint8Array;
+  tiles: Array<{ x: number; y: number; t: number }>;
 }): boolean => {
   return data.tiles.length === data.width * data.height;
 };
@@ -136,3 +142,19 @@ export const validateSpawnExit = (data: {
   );
 };
 
+/**
+ * Custom validation: All tiles have valid positions
+ */
+export const validateTilePositions = (data: {
+  width: number;
+  height: number;
+  tiles: Array<{ x: number; y: number; t: number }>;
+}): boolean => {
+  return data.tiles.every(
+    tile =>
+      tile.x >= 0 &&
+      tile.x < data.width &&
+      tile.y >= 0 &&
+      tile.y < data.height
+  );
+};

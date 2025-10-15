@@ -19,6 +19,7 @@ import {
   type IMapSystem,
   type MapGenConfig,
   type MapData,
+  type Tile,
   type Room,
   type Connector,
   type Position,
@@ -31,6 +32,8 @@ export interface IMapManager extends IMapSystem {
   update(deltaTime: number): Promise<Result<void, Error>>;
   reset(): Promise<Result<void, Error>>;
   dispose(): Promise<void>;
+  getCurrentMap(): MapData | null;
+  getDebugStats(): { queuePending: number } | undefined;
 }
 
 interface MapManagerConfig extends SystemConfig {
@@ -65,6 +68,21 @@ export class MapManager extends SystemTemplate implements IMapManager {
   }
 
   // ========================================
+  // Test-Only Debug Hook
+  // ========================================
+
+  /**
+   * Test-only method to inspect queue state.
+   * Returns undefined in non-test environments.
+   */
+  public getDebugStats(): { queuePending: number } | undefined {
+    if (process.env.NODE_ENV !== 'test') {
+      return undefined;
+    }
+    return { queuePending: this.queue.pending };
+  }
+
+  // ========================================
   // IMapSystem Interface
   // ========================================
 
@@ -84,6 +102,7 @@ export class MapManager extends SystemTemplate implements IMapManager {
       this.logger.info('Generating map', {
         width: config.width,
         height: config.height,
+        seed: config.seed,
         algorithm: config.algorithm ?? 'bsp',
       });
 
@@ -98,27 +117,30 @@ export class MapManager extends SystemTemplate implements IMapManager {
   }
 
   /**
-   * Get tile at (x, y). Returns undefined if out of bounds.
+   * Get tile type at (x, y). Returns undefined if out of bounds.
    */
-  public getTile(data: MapData, x: number, y: number): TileType | undefined {
+  public getTile(data: MapData, x: number, y: number): number | undefined {
     if (x < 0 || x >= data.width || y < 0 || y >= data.height) {
       return undefined;
     }
-    const index = y * data.width + x;
-    return data.tiles[index] as TileType;
+    const tile = data.tiles.find(t => t.x === x && t.y === y);
+    return tile?.t;
   }
 
   /**
    * Set tile at (x, y). Returns new MapData (immutable update).
    */
-  public setTile(data: MapData, x: number, y: number, tile: TileType): MapData {
+  public setTile(data: MapData, x: number, y: number, tileType: number): MapData {
     if (x < 0 || x >= data.width || y < 0 || y >= data.height) {
       throw new Error(`setTile out of bounds: (${x}, ${y})`);
     }
+    if (tileType < 0 || tileType > 5) {
+      throw new Error(`Invalid tile type: ${tileType}`);
+    }
     
-    const newTiles = new Uint8Array(data.tiles);
-    const index = y * data.width + x;
-    newTiles[index] = tile;
+    const newTiles = data.tiles.map(t =>
+      t.x === x && t.y === y ? { ...t, t: tileType } : t
+    );
     
     return { ...data, tiles: newTiles };
   }
@@ -128,12 +150,12 @@ export class MapManager extends SystemTemplate implements IMapManager {
    * Walkable: Floor(0), Door(3), Spawn(4), Exit(5)
    * Impassable: Wall(1), Water(2)
    */
-  public isWalkable(tile: TileType): boolean {
+  public isWalkable(tileType: number): boolean {
     return (
-      tile === TileType.Floor ||
-      tile === TileType.Door ||
-      tile === TileType.Spawn ||
-      tile === TileType.Exit
+      tileType === TileType.Floor ||
+      tileType === TileType.Door ||
+      tileType === TileType.Spawn ||
+      tileType === TileType.Exit
     );
   }
 
@@ -152,7 +174,7 @@ export class MapManager extends SystemTemplate implements IMapManager {
     const serializable = {
       width: data.width,
       height: data.height,
-      tiles: Array.from(data.tiles),
+      tiles: data.tiles,
       rooms: data.rooms,
       connectors: data.connectors,
       spawn: data.spawn,
@@ -171,7 +193,7 @@ export class MapManager extends SystemTemplate implements IMapManager {
       const parsed = JSON.parse(json) as {
         width: number;
         height: number;
-        tiles: number[];
+        tiles: Tile[];
         rooms: Room[];
         connectors: Connector[];
         spawn: Position;
@@ -180,10 +202,25 @@ export class MapManager extends SystemTemplate implements IMapManager {
         algorithm: string;
       };
 
+      // Validate required fields exist
+      if (
+        typeof parsed.width !== 'number' ||
+        typeof parsed.height !== 'number' ||
+        !Array.isArray(parsed.tiles) ||
+        !Array.isArray(parsed.rooms) ||
+        !Array.isArray(parsed.connectors) ||
+        !parsed.spawn ||
+        !parsed.exit ||
+        typeof parsed.seed !== 'number' ||
+        typeof parsed.algorithm !== 'string'
+      ) {
+        return Err('Invalid map data structure');
+      }
+
       const data: MapData = {
         width: parsed.width,
         height: parsed.height,
-        tiles: new Uint8Array(parsed.tiles),
+        tiles: parsed.tiles,
         rooms: parsed.rooms,
         connectors: parsed.connectors,
         spawn: parsed.spawn,
@@ -192,7 +229,6 @@ export class MapManager extends SystemTemplate implements IMapManager {
         algorithm: parsed.algorithm,
       };
 
-      // TODO: Validate deserialized data
       return Ok(data);
     } catch (err) {
       return Err(`Failed to deserialize map: ${String(err)}`);
@@ -245,4 +281,3 @@ export class MapManager extends SystemTemplate implements IMapManager {
   // TODO: validateInvariants(data: MapData): Result<void, string>
   // TODO: floodFill(data: MapData, start: Position): Set<string>
 }
-

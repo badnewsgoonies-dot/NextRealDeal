@@ -85,22 +85,26 @@ export interface Deserializable<T, TData> {
  */
 
 /**
- * Tile types for map generation
- * 0 = floor (walkable)
- * 1 = wall (impassable)
- * 2 = water (impassable)
- * 3 = door (passable for connectivity)
- * 4 = spawn (walkable, player start)
- * 5 = exit (walkable, level goal)
+ * Tile with position and type
+ * t: 0=floor, 1=wall, 2=water, 3=door, 4=spawn, 5=exit
  */
-export enum TileType {
-  Floor = 0,
-  Wall = 1,
-  Water = 2,
-  Door = 3,
-  Spawn = 4,
-  Exit = 5,
+export interface Tile {
+  readonly x: number;
+  readonly y: number;
+  readonly t: number; // 0..5
 }
+
+/**
+ * Tile type constants for readability
+ */
+export const TileType = {
+  Floor: 0,
+  Wall: 1,
+  Water: 2,
+  Door: 3,
+  Spawn: 4,
+  Exit: 5,
+} as const;
 
 /**
  * Map generation configuration
@@ -108,6 +112,7 @@ export enum TileType {
 export interface MapGenConfig {
   readonly width: number;  // Even number in [16..128]
   readonly height: number; // Even number in [16..128]
+  readonly seed: number;   // RNG seed for this map
   readonly minRoomSize?: number;
   readonly maxRoomSize?: number;
   readonly extraLoopsPct?: number; // 0-100, percentage of extra connectors for loops
@@ -139,7 +144,7 @@ export interface Connector {
 export interface MapData {
   readonly width: number;
   readonly height: number;
-  readonly tiles: Uint8Array; // Flattened 2D array, row-major order
+  readonly tiles: readonly Tile[]; // Array of tiles with positions
   readonly rooms: readonly Room[];
   readonly connectors: readonly Connector[];
   readonly spawn: Position;
@@ -153,9 +158,9 @@ export interface MapData {
  */
 export interface IMapSystem {
   generate(config: MapGenConfig, signal?: AbortSignal): Promise<Result<MapData, string>>;
-  getTile(data: MapData, x: number, y: number): TileType | undefined;
-  setTile(data: MapData, x: number, y: number, tile: TileType): MapData;
-  isWalkable(tile: TileType): boolean;
+  getTile(data: MapData, x: number, y: number): number | undefined;
+  setTile(data: MapData, x: number, y: number, tileType: number): MapData;
+  isWalkable(tileType: number): boolean;
   isConnected(data: MapData): boolean;
   serialize(data: MapData): string;
   deserialize(json: string): Result<MapData, string>;
