@@ -7,58 +7,51 @@ export interface IAsyncQueue {
   enqueue<T>(task: () => Promise<T>): Promise<T>;
   isEmpty(): boolean;
   size(): number;
-  pending: number; // Number of tasks waiting to execute
+  pending: number; // Number of tasks currently executing (0 or 1)
+  drain(): Promise<void>;
 }
 
-export const makeAsyncQueue = (): IAsyncQueue => {
-  const queue: Array<() => Promise<void>> = [];
-  let running = false;
+export class AsyncQueue implements IAsyncQueue {
+  private tail: Promise<void> = Promise.resolve();
+  private _pending = 0;
+  private _size = 0;
 
-  const processQueue = async (): Promise<void> => {
-    if (running || queue.length === 0) return;
-    running = true;
-
-    while (queue.length > 0) {
-      const task = queue.shift();
-      if (task) {
-        try {
-          await task();
-        } catch {
-          // Task errors are already handled in enqueue
-          // This catch prevents unhandled promise rejection
-        }
+  public enqueue<T>(task: () => Promise<T>): Promise<T> {
+    this._size++;
+    
+    const p = this.tail.then(async () => {
+      this._size--;
+      this._pending++;
+      try {
+        return await task();
+      } finally {
+        this._pending--;
       }
-    }
-
-    running = false;
-  };
-
-  const enqueue = <T>(task: () => Promise<T>): Promise<T> => {
-    return new Promise<T>((resolve, reject) => {
-      const wrappedTask = async (): Promise<void> => {
-        try {
-          const result = await task();
-          resolve(result);
-        } catch (err) {
-          reject(err);
-        }
-      };
-
-      queue.push(wrappedTask);
-      void processQueue();
     });
-  };
 
-  const isEmpty = (): boolean => queue.length === 0 && !running;
-  const size = (): number => queue.length;
+    this.tail = p.then(
+      () => void 0,
+      () => void 0
+    );
 
-  return { 
-    enqueue, 
-    isEmpty, 
-    size,
-    get pending(): number {
-      return queue.length;
-    }
-  };
-};
+    return p;
+  }
 
+  public async drain(): Promise<void> {
+    await this.tail;
+  }
+
+  public isEmpty(): boolean {
+    return this._size === 0 && this._pending === 0;
+  }
+
+  public size(): number {
+    return this._size;
+  }
+
+  public get pending(): number {
+    return this._pending;
+  }
+}
+
+export const makeAsyncQueue = (): IAsyncQueue => new AsyncQueue();

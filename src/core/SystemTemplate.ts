@@ -3,14 +3,13 @@
  * Enforces lifecycle, dependency injection, and cleanup patterns.
  */
 
-import type { IDisposable } from '../util/Scope.js';
 import type { Result } from '../util/Result.js';
 
-export interface ISystem extends IDisposable {
+export interface ISystem {
   readonly name: string;
   initialize(): Promise<Result<void, Error>>;
   update(deltaTime: number): Promise<Result<void, Error>>;
-  reset(): Promise<Result<void, Error>>;
+  destroy(): Promise<void>;
 }
 
 export interface SystemConfig {
@@ -75,33 +74,16 @@ export abstract class SystemTemplate implements ISystem {
     }
   }
 
-  public async reset(): Promise<Result<void, Error>> {
-    if (this.disposed) {
-      return { ok: false, error: new Error(`System ${this.name} disposed`) };
-    }
-
-    try {
-      await this.onReset();
-      return { ok: true, value: undefined };
-    } catch (err) {
-      return { 
-        ok: false, 
-        error: err instanceof Error ? err : new Error(String(err)) 
-      };
-    }
-  }
-
-  public async dispose(): Promise<void> {
+  public async destroy(): Promise<void> {
     if (this.disposed) return;
     this.disposed = true;
     this.initialized = false;
-    await this.onDispose();
+    await this.onDestroy();
   }
 
   // Lifecycle hooks for subclasses
   protected abstract onInitialize(): Promise<void>;
   protected abstract onUpdate(deltaTime: number): Promise<void>;
-  protected abstract onReset(): Promise<void>;
-  protected abstract onDispose(): Promise<void>;
+  protected abstract onDestroy(): Promise<void>;
 }
 

@@ -64,5 +64,24 @@ const makeFromGen = (gen: Gen, meta: { seed: number; forks: number; label?: stri
   return { int, float, bool, choose, shuffleInPlace, fork, describe };
 };
 
+/**
+ * Creates a deterministic random number generator.
+ * 
+ * IMPORTANT: The root IRng returned by makeRng() should be used as a fork factory only.
+ * Do not draw values from it directly. Instead, create forks for each subsystem:
+ * 
+ * Sequential calls to fork() are deterministic and distinct.
+ * The parent generator advances on each fork to ensure independence.
+ * Do not draw random values from the parent after creation—fork and use children only.
+ * 
+ * @example
+ * const rootRng = makeRng(seed);
+ * const mapRng = rootRng.fork('map');
+ * const battleRng = rootRng.fork('battle');
+ * // Use mapRng and battleRng, not rootRng
+ * 
+ * @param seed - The seed for deterministic generation
+ * @param label - Optional label for debugging
+ */
 export const makeRng = (seed: number, label?: string): IRng =>
   makeFromGen(prand.xoroshiro128plus(seed), { seed, forks: 0, label });

@@ -26,7 +26,7 @@ describe('MapManager', () => {
   });
 
   afterEach(async () => {
-    await manager.dispose();
+    await manager.destroy();
   });
 
   describe('Lifecycle', () => {
@@ -39,7 +39,7 @@ describe('MapManager', () => {
       );
       const result = await manager2.initialize();
       expect(result.ok).toBe(true);
-      await manager2.dispose();
+      await manager2.destroy();
     });
 
     test('updates without errors', async () => {
@@ -47,13 +47,8 @@ describe('MapManager', () => {
       expect(result.ok).toBe(true);
     });
 
-    test('resets successfully', async () => {
-      const result = await manager.reset();
-      expect(result.ok).toBe(true);
-    });
-
-    test('disposes cleanly', async () => {
-      await expect(manager.dispose()).resolves.not.toThrow();
+    test('destroys cleanly', async () => {
+      await expect(manager.destroy()).resolves.not.toThrow();
     });
 
     test('getCurrentMap returns null initially', () => {
@@ -281,14 +276,106 @@ describe('MapManager', () => {
     });
   });
 
-  // TODO: These tests will pass once generation is implemented
-  describe.todo('Map Generation', () => {
-    test.todo('generates valid 64x64 map');
-    test.todo('respects even width/height constraints');
-    test.todo('creates exactly one spawn and exit');
-    test.todo('ensures border is all walls');
-    test.todo('creates connected walkable regions');
-    test.todo('adds extra loops based on configuration');
-    test.todo('generates deterministically with same seed');
+  describe('Map Generation', () => {
+    test('generates valid 64x64 map', async () => {
+      const result = await manager.generate({ width: 64, height: 64, seed: 12345 });
+      expect(result.ok).toBe(true);
+      
+      if (result.ok) {
+        expect(result.value.width).toBe(64);
+        expect(result.value.height).toBe(64);
+        expect(result.value.tiles.length).toBe(64 * 64);
+      }
+    });
+
+    test('generates custom size map', async () => {
+      const result = await manager.generate({ width: 32, height: 48, seed: 99999 });
+      expect(result.ok).toBe(true);
+      
+      if (result.ok) {
+        expect(result.value.width).toBe(32);
+        expect(result.value.height).toBe(48);
+        expect(result.value.tiles.length).toBe(32 * 48);
+      }
+    });
+
+    test('rejects odd dimensions', async () => {
+      const result1 = await manager.generate({ width: 33, height: 32, seed: 111 });
+      expect(result1.ok).toBe(false);
+      
+      const result2 = await manager.generate({ width: 32, height: 33, seed: 222 });
+      expect(result2.ok).toBe(false);
+    });
+
+    test('rejects out of range dimensions', async () => {
+      const result1 = await manager.generate({ width: 14, height: 16, seed: 333 });
+      expect(result1.ok).toBe(false);
+      
+      const result2 = await manager.generate({ width: 130, height: 64, seed: 444 });
+      expect(result2.ok).toBe(false);
+    });
+
+    test('creates exactly one spawn and exit', async () => {
+      const result = await manager.generate({ width: 64, height: 64, seed: 555 });
+      expect(result.ok).toBe(true);
+      
+      if (result.ok) {
+        const types = result.value.tiles.map(t => t.t);
+        const spawnCount = types.filter(t => t === TileType.Spawn).length;
+        const exitCount = types.filter(t => t === TileType.Exit).length;
+        
+        expect(spawnCount).toBe(1);
+        expect(exitCount).toBe(1);
+      }
+    });
+
+    test('ensures border is all walls', async () => {
+      const result = await manager.generate({ width: 32, height: 32, seed: 666 });
+      expect(result.ok).toBe(true);
+      
+      if (result.ok) {
+        const { tiles, width, height } = result.value;
+        
+        // Check top and bottom borders
+        for (let x = 0; x < width; x++) {
+          const topTile = tiles.find(t => t.x === x && t.y === 0);
+          const bottomTile = tiles.find(t => t.x === x && t.y === height - 1);
+          expect(topTile?.t).toBe(TileType.Wall);
+          expect(bottomTile?.t).toBe(TileType.Wall);
+        }
+        
+        // Check left and right borders
+        for (let y = 0; y < height; y++) {
+          const leftTile = tiles.find(t => t.x === 0 && t.y === y);
+          const rightTile = tiles.find(t => t.x === width - 1 && t.y === y);
+          expect(leftTile?.t).toBe(TileType.Wall);
+          expect(rightTile?.t).toBe(TileType.Wall);
+        }
+      }
+    });
+
+    test('generates deterministically with same seed', async () => {
+      const result1 = await manager.generate({ width: 32, height: 32, seed: 777 });
+      
+      // Create new manager with same RNG seed
+      const manager2 = new MapManager(
+        { name: 'Map' },
+        makeRng(20251014),
+        logger,
+        queue
+      );
+      await manager2.initialize();
+      const result2 = await manager2.generate({ width: 32, height: 32, seed: 777 });
+      await manager2.destroy();
+      
+      expect(result1.ok).toBe(true);
+      expect(result2.ok).toBe(true);
+      
+      if (result1.ok && result2.ok) {
+        // Maps should be identical
+        expect(result1.value.tiles).toEqual(result2.value.tiles);
+        expect(result1.value.rooms).toEqual(result2.value.rooms);
+      }
+    });
   });
 });
