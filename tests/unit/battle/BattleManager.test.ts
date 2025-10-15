@@ -3,7 +3,7 @@ import { BattleManager } from '../../../src/battle/BattleManager.js';
 import { makeRng } from '../../../src/util/Rng.js';
 import { makeLogger } from '../../../src/util/Logger.js';
 import { makeAsyncQueue } from '../../../src/util/AsyncQueue.js';
-import type { Unit } from '../../../src/types/contracts.js';
+// import type { Unit } from '../../../src/types/contracts.js'; // Will be used when tests are implemented
 
 describe('BattleManager', () => {
   let manager: BattleManager;
