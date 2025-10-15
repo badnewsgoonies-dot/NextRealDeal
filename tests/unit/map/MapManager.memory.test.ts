@@ -2,15 +2,12 @@ import { describe, test, expect } from 'vitest';
 import { MapManager } from '../../../src/map/MapManager.js';
 import { makeRng } from '../../../src/util/Rng.js';
 import { makeLogger } from '../../../src/util/Logger.js';
-import { makeAsyncQueue } from '../../../src/util/AsyncQueue.js';
 
 describe('MapManager Memory & Cleanup', () => {
   test('cleanup after destroy()', async () => {
     const mgr = new MapManager(
-      { name: 'Map' },
-      makeRng(999),
       makeLogger({ enabled: false }),
-      makeAsyncQueue()
+      makeRng(999)
     );
     
     await mgr.initialize();
@@ -34,10 +31,8 @@ describe('MapManager Memory & Cleanup', () => {
 
   test('no exceptions on destroy', async () => {
     const mgr = new MapManager(
-      { name: 'Map' },
-      makeRng(111),
       makeLogger({ enabled: false }),
-      makeAsyncQueue()
+      makeRng(111)
     );
     
     await mgr.initialize();
@@ -46,10 +41,8 @@ describe('MapManager Memory & Cleanup', () => {
 
   test('multiple destroy calls are safe', async () => {
     const mgr = new MapManager(
-      { name: 'Map' },
-      makeRng(222),
       makeLogger({ enabled: false }),
-      makeAsyncQueue()
+      makeRng(222)
     );
     
     await mgr.initialize();
@@ -60,10 +53,8 @@ describe('MapManager Memory & Cleanup', () => {
 
   test('queue empties after concurrent operations', async () => {
     const mgr = new MapManager(
-      { name: 'Map' },
-      makeRng(444),
       makeLogger({ enabled: false }),
-      makeAsyncQueue()
+      makeRng(444)
     );
     
     await mgr.initialize();
@@ -86,10 +77,8 @@ describe('MapManager Memory & Cleanup', () => {
 
   test('destroy during pending operations', async () => {
     const mgr = new MapManager(
-      { name: 'Map' },
-      makeRng(555),
       makeLogger({ enabled: false }),
-      makeAsyncQueue()
+      makeRng(555)
     );
     
     await mgr.initialize();
@@ -117,10 +106,8 @@ describe('MapManager Memory & Cleanup', () => {
 
   test('lifecycle methods can be called multiple times', async () => {
     const mgr = new MapManager(
-      { name: 'Map' },
-      makeRng(666),
       makeLogger({ enabled: false }),
-      makeAsyncQueue()
+      makeRng(666)
     );
     
     // Initialize twice
@@ -137,10 +124,8 @@ describe('MapManager Memory & Cleanup', () => {
 
   test('no memory leak from serialization', async () => {
     const mgr = new MapManager(
-      { name: 'Map' },
-      makeRng(777),
       makeLogger({ enabled: false }),
-      makeAsyncQueue()
+      makeRng(777)
     );
     
     await mgr.initialize();

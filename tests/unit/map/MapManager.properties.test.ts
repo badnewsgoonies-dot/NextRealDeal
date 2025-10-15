@@ -3,7 +3,6 @@ import { describe, test, expect } from 'vitest';
 import { MapManager } from '../../../src/map/MapManager.js';
 import { makeRng } from '../../../src/util/Rng.js';
 import { makeLogger } from '../../../src/util/Logger.js';
-import { makeAsyncQueue } from '../../../src/util/AsyncQueue.js';
 import { bfsReachable, isWalkable } from '../../helpers/grid.js';
 import type { MapData } from '../../../src/types/contracts.js';
 
@@ -12,8 +11,7 @@ describe('Map Properties (Property-Based Testing)', () => {
   const createManager = (seed: number): MapManager => {
     const rng = makeRng(seed);
     const logger = makeLogger({ enabled: false });
-    const queue = makeAsyncQueue();
-    return new MapManager({ name: 'Map' }, rng, logger, queue);
+    return new MapManager(logger, rng);
   };
 
   test('connectivity & determinism', async () => {

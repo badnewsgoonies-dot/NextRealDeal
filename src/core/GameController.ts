@@ -1,18 +1,16 @@
 /*
- * GameController: Composition root for game systems.
- * Wires together Map and Battle systems with strict dependency injection.
+ * GameController: Composition root for Map and Battle systems.
  * 
  * Responsibilities:
- * - Initialize/update/destroy subsystems in correct order
- * - Forward lifecycle calls (no game logic)
- * - Provide access to subsystems
- * - Expose debug stats for testing
+ * - Dependency injection (strict DI - systems injected, not constructed)
+ * - Lifecycle coordination (init: Map → Battle, destroy: Battle → Map)
+ * - System access via getters
+ * - NO game logic (pure wiring)
  */
 
 import { SystemTemplate } from './SystemTemplate.js';
 import type { ILogger } from '../util/Logger.js';
 import type { IRng } from '../util/Rng.js';
-import type { IAsyncQueue } from '../util/AsyncQueue.js';
 import type { IMapSystem, IBattleSystem, IGameController } from '../types/contracts.js';
 import { makeAsyncQueue } from '../util/AsyncQueue.js';
 import { ok, err, type Result } from '../util/Result.js';
@@ -21,7 +19,7 @@ import { ok, err, type Result } from '../util/Result.js';
  * GameController implementation
  */
 export class GameController extends SystemTemplate implements IGameController {
-  private readonly queue: IAsyncQueue;
+  private readonly queue = makeAsyncQueue();
 
   constructor(
     protected readonly log: ILogger,
@@ -30,34 +28,30 @@ export class GameController extends SystemTemplate implements IGameController {
     private readonly battleSystem: IBattleSystem
   ) {
     super({ name: 'GameController' });
-    this.queue = makeAsyncQueue();
   }
 
   // ========================================
-  // IGameController Interface (Override SystemTemplate)
+  // Lifecycle (Map → Battle init, Battle → Map destroy)
   // ========================================
 
-  /**
-   * Initialize all subsystems in order: Map → Battle
-   */
-  public async initialize(signal?: AbortSignal): Promise<Result<void, string>> {
+  async initialize(signal?: AbortSignal): Promise<Result<void, string>> {
     try {
       return await this.queue.run(async () => {
         if (signal?.aborted) return err('aborted');
 
-        // Initialize map system
-        const mapResult = await this.mapSystem.initialize();
-        if (!mapResult.ok) {
-          return err(`map-init-failed: ${mapResult.error.message}`);
+        // Initialize Map first
+        const mapResult = await this.mapSystem.initialize?.(signal);
+        if (mapResult && !mapResult.ok) {
+          return err(`map-init-failed:${String(mapResult.error)}`);
         }
 
-        // Initialize battle system
-        const battleResult = await this.battleSystem.initialize();
-        if (!battleResult.ok) {
-          return err(`battle-init-failed: ${battleResult.error.message}`);
+        // Initialize Battle second
+        const battleResult = await this.battleSystem.initialize?.(signal);
+        if (battleResult && !battleResult.ok) {
+          return err(`battle-init-failed:${String(battleResult.error)}`);
         }
 
-        this.log.info('gc:init_ok', {});
+        this.log.info('gc:init_ok', { map: 'ok', battle: 'ok' });
         return ok(undefined);
       }, { signal });
     } catch (e: unknown) {
@@ -68,16 +62,14 @@ export class GameController extends SystemTemplate implements IGameController {
     }
   }
 
-  /**
-   * Update all subsystems: Map → Battle
-   */
-  public async update(dt: number, signal?: AbortSignal): Promise<Result<void, string>> {
+  async update(dt: number, signal?: AbortSignal): Promise<Result<void, string>> {
     try {
       return await this.queue.run(async () => {
         if (signal?.aborted) return err('aborted');
 
-        await this.mapSystem.update(dt);
-        await this.battleSystem.update(dt);
+        // Update both systems (order doesn't matter for update)
+        await this.mapSystem.update?.(dt, signal);
+        await this.battleSystem.update?.(dt, signal);
 
         return ok(undefined);
       }, { signal });
@@ -89,34 +81,34 @@ export class GameController extends SystemTemplate implements IGameController {
     }
   }
 
-  /**
-   * Destroy all subsystems in reverse order: Battle → Map
-   */
-  public async destroy(): Promise<void> {
+  async destroy(): Promise<void> {
     try {
       await this.queue.run(async () => {
-        // Teardown in reverse order
+        // Destroy in REVERSE order (Battle → Map)
         try {
-          await this.battleSystem.destroy();
+          await this.battleSystem.destroy?.();
         } finally {
-          await this.mapSystem.destroy();
+          await this.mapSystem.destroy?.();
         }
+
         this.log.info('gc:destroy_ok', {});
       });
-    } catch {
-      // Keep destroy idempotent; subsystems log their own errors
+    } catch (e: unknown) {
+      // Keep destroy idempotent; child systems log their own errors
+      const error = e as { message?: string };
+      this.log.warn('gc:destroy_warning', { error: error?.message });
     }
   }
 
   // ========================================
-  // Accessors
+  // System Access (getters only)
   // ========================================
 
-  public getMapManager(): IMapSystem {
+  getMapManager(): IMapSystem {
     return this.mapSystem;
   }
 
-  public getBattleManager(): IBattleSystem {
+  getBattleManager(): IBattleSystem {
     return this.battleSystem;
   }
 
@@ -124,10 +116,8 @@ export class GameController extends SystemTemplate implements IGameController {
   // Test-Only Debug Hook
   // ========================================
 
-  public getDebugStats(): { queuePending: number; mapPending: number; battlePending: number } | undefined {
-    if (process.env.NODE_ENV !== 'test') {
-      return undefined;
-    }
+  getDebugStats(): { queuePending: number; mapPending: number; battlePending: number } | undefined {
+    if (process.env.NODE_ENV !== 'test') return undefined;
 
     return {
       queuePending: this.queue.pending,
@@ -137,7 +127,7 @@ export class GameController extends SystemTemplate implements IGameController {
   }
 
   // ========================================
-  // SystemTemplate Lifecycle (Not Used - We Override)
+  // SystemTemplate Lifecycle Hooks (unused - we override public methods)
   // ========================================
 
   protected async onInitialize(): Promise<void> {

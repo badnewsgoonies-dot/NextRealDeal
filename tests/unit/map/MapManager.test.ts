@@ -2,25 +2,17 @@ import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { MapManager } from '../../../src/map/MapManager.js';
 import { makeRng } from '../../../src/util/Rng.js';
 import { makeLogger } from '../../../src/util/Logger.js';
-import { makeAsyncQueue } from '../../../src/util/AsyncQueue.js';
 import { TileType, type MapData } from '../../../src/types/contracts.js';
 
 describe('MapManager', () => {
   let manager: MapManager;
   let rng: ReturnType<typeof makeRng>;
   let logger: ReturnType<typeof makeLogger>;
-  let queue: ReturnType<typeof makeAsyncQueue>;
 
   beforeEach(async () => {
     rng = makeRng(20251014); // Global seed
     logger = makeLogger({ enabled: false });
-    queue = makeAsyncQueue();
-    manager = new MapManager(
-      { name: 'Map', defaultWidth: 64, defaultHeight: 64 },
-      rng,
-      logger,
-      queue
-    );
+    manager = new MapManager(logger, rng);
     const result = await manager.initialize();
     expect(result.ok).toBe(true);
   });
@@ -31,12 +23,7 @@ describe('MapManager', () => {
 
   describe('Lifecycle', () => {
     test('initializes successfully', async () => {
-      const manager2 = new MapManager(
-        { name: 'Map' },
-        rng,
-        logger,
-        queue
-      );
+      const manager2 = new MapManager(logger, rng);
       const result = await manager2.initialize();
       expect(result.ok).toBe(true);
       await manager2.destroy();
@@ -358,12 +345,7 @@ describe('MapManager', () => {
       const result1 = await manager.generate({ width: 32, height: 32, seed: 777 });
       
       // Create new manager with same RNG seed
-      const manager2 = new MapManager(
-        { name: 'Map' },
-        makeRng(20251014),
-        logger,
-        queue
-      );
+      const manager2 = new MapManager(logger, makeRng(20251014));
       await manager2.initialize();
       const result2 = await manager2.generate({ width: 32, height: 32, seed: 777 });
       await manager2.destroy();

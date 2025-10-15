@@ -1,6 +1,6 @@
 /*
- * Test helper for creating system stubs.
- * Used to test GameController lifecycle ordering without real systems.
+ * Test helper: System stubs for testing GameController integration.
+ * Provides reusable mocks that track lifecycle method calls.
  */
 
 import { ok, err, type Result } from '../../src/util/Result.js';
@@ -14,13 +14,19 @@ export interface TraceEntry {
   method: Method;
 }
 
-export const makeTrace = (): {
-  entries: TraceEntry[];
-  record: (sys: string, method: Method) => void;
-} => {
+/**
+ * Creates a trace recorder for verifying lifecycle call order.
+ * 
+ * @example
+ * const trace = makeTrace();
+ * trace.record('map', 'initialize');
+ * trace.record('battle', 'initialize');
+ * expect(trace.entries[0].sys).toBe('map');
+ */
+export const makeTrace = (): { entries: TraceEntry[]; record: (sys: string, method: Method) => void } => {
   let at = 0;
   const entries: TraceEntry[] = [];
-  
+
   return {
     entries,
     record(sys: string, method: Method): void {
@@ -34,6 +40,13 @@ interface StubOpts {
   debugPending?: number;
 }
 
+/**
+ * Creates a mock system for testing GameController integration.
+ * 
+ * @param name - System identifier for trace logging
+ * @param trace - Trace recorder to track lifecycle calls
+ * @param opts - Configuration (success/failure, debug stats)
+ */
 export const makeSystemStub = <T extends ISystem>(
   name: string,
   trace: ReturnType<typeof makeTrace>,
@@ -42,18 +55,21 @@ export const makeSystemStub = <T extends ISystem>(
   const { initOk = true, debugPending = 0 } = opts;
 
   const stub: ISystem = {
-    name,
-    async initialize(_signal?: AbortSignal): Promise<Result<void, Error>> {
+    async initialize(signal?: AbortSignal): Promise<Result<void, string>> {
+      if (signal?.aborted) return err('aborted');
       trace.record(name, 'initialize');
-      return initOk ? ok(undefined) : { ok: false, error: new Error('boom') };
+      return initOk ? ok(undefined) : err('boom');
     },
-    async update(_dt: number): Promise<Result<void, Error>> {
+
+    async update(_dt: number, _signal?: AbortSignal): Promise<Result<void, string>> {
       trace.record(name, 'update');
       return ok(undefined);
     },
+
     async destroy(): Promise<void> {
       trace.record(name, 'destroy');
     },
+
     getDebugStats(): { queuePending: number } | undefined {
       if (process.env.NODE_ENV !== 'test') return undefined;
       return { queuePending: debugPending };
@@ -62,4 +78,3 @@ export const makeSystemStub = <T extends ISystem>(
 
   return { stub: stub as unknown as T };
 };
-
