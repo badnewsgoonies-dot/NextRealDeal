@@ -243,3 +243,15 @@ export interface IBattleSystem {
   getCombatLog(): readonly CombatAction[];
 }
 
+/**
+ * Game Controller interface - Composition root for game systems
+ */
+export interface IGameController {
+  initialize(signal?: AbortSignal): Promise<Result<void, string>>;
+  update(dt: number, signal?: AbortSignal): Promise<Result<void, string>>;
+  destroy(): Promise<void>;
+  getMapManager(): IMapSystem;
+  getBattleManager(): IBattleSystem;
+  getDebugStats(): { queuePending: number; mapPending: number; battlePending: number } | undefined;
+}
+
