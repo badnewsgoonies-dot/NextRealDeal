@@ -16,7 +16,7 @@ describe('Map Properties (Property-Based Testing)', () => {
     return new MapManager({ name: 'Map' }, rng, logger, queue);
   };
 
-  test.todo('connectivity & determinism', async () => {
+  test('connectivity & determinism', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.record({
@@ -33,8 +33,8 @@ describe('Map Properties (Property-Based Testing)', () => {
           await m2.initialize();
           const r1 = await m1.generate(cfg);
           const r2 = await m2.generate(cfg);
-          await m1.dispose();
-          await m2.dispose();
+          await m1.destroy();
+          await m2.destroy();
 
           expect(r1.ok && r2.ok).toBe(true);
           if (r1.ok && r2.ok) {

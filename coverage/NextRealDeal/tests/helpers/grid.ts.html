@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">14.58% </span>
+                <span class="strong">58.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>7/48</span>
+                <span class='fraction'>28/48</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>16/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">57.14% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>4/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">14.58% </span>
+                <span class="strong">58.33% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>7/48</span>
+                <span class='fraction'>28/48</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -173,47 +173,47 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">144848x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">102368x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">20814x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-yes">20x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-yes">34136x</span>
+<span class="cline-any cline-yes">34136x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">34136x</span>
+<span class="cline-any cline-yes">20814x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">34136x</span>
+<span class="cline-any cline-yes">83256x</span>
+<span class="cline-any cline-yes">83256x</span>
+<span class="cline-any cline-yes">83256x</span>
+<span class="cline-any cline-yes">34116x</span>
+<span class="cline-any cline-yes">34116x</span>
+<span class="cline-any cline-yes">83256x</span>
+<span class="cline-any cline-yes">83256x</span>
+<span class="cline-any cline-yes">20814x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-yes">20x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -268,48 +268,48 @@ export type MapData = { width: number; height: number; tiles: Tile[] };
  * Walkable: 0=floor, 3=door, 4=spawn, 5=exit
  * Impassable: 1=wall, 2=water
  */
-export const isWalkable = <span class="fstat-no" title="function not covered" >(t: number): boolean =&gt; </span>
-<span class="cstat-no" title="statement not covered" >  t === 0 || t === 3 || t === 4 || t === 5;</span>
+export const isWalkable = (t: number): boolean =&gt; 
+  t === 0 || t === 3 || t === 4 || t === 5;
 &nbsp;
 /**
  * Get tile index in tiles array for position (x, y)
  */
-const index = <span class="fstat-no" title="function not covered" >(m: MapData, x: number, y: number): number =&gt; </span>
-<span class="cstat-no" title="statement not covered" >  y * m.width + x;</span>
+const index = (m: MapData, x: number, y: number): number =&gt; 
+  y * m.width + x;
 &nbsp;
 /**
  * Get 4-directional neighbors
  */
-const neighbors = <span class="fstat-no" title="function not covered" >(x: number, y: number): [number, number][] =&gt; </span>
-<span class="cstat-no" title="statement not covered" >  [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];</span>
+const neighbors = (x: number, y: number): [number, number][] =&gt; 
+  [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
 &nbsp;
 /**
  * Perform BFS from (sx, sy) and return set of reachable tile indices.
  * Only traverses walkable tiles.
  */
-export <span class="fstat-no" title="function not covered" >function bfsReachable(m: MapData, sx: number, sy: number): Set&lt;number&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  const seen = new Set&lt;number&gt;();</span>
-<span class="cstat-no" title="statement not covered" >  const q: [number, number][] = [[sx, sy]];</span>
+export function bfsReachable(m: MapData, sx: number, sy: number): Set&lt;number&gt; {
+  const seen = new Set&lt;number&gt;();
+  const q: [number, number][] = [[sx, sy]];
   
-<span class="cstat-no" title="statement not covered" >  while (q.length &gt; 0) {</span>
-<span class="cstat-no" title="statement not covered" >    const [x, y] = q.shift()!;</span>
-<span class="cstat-no" title="statement not covered" >    const i = index(m, x, y);</span>
+  while (q.length &gt; 0) {
+    const [x, y] = q.shift()!;
+    const i = index(m, x, y);
     
-<span class="cstat-no" title="statement not covered" >    if (seen.has(i)) continue;</span>
-<span class="cstat-no" title="statement not covered" >    seen.add(i);</span>
+    if (seen.has(i)) continue;
+    seen.add(i);
     
-<span class="cstat-no" title="statement not covered" >    for (const [nx, ny] of neighbors(x, y)) {</span>
-<span class="cstat-no" title="statement not covered" >      if (nx &gt;= 0 &amp;&amp; ny &gt;= 0 &amp;&amp; nx &lt; m.width &amp;&amp; ny &lt; m.height) {</span>
-<span class="cstat-no" title="statement not covered" >        const tile = m.tiles.find(t =&gt; t.x === nx &amp;&amp; t.y === ny);</span>
-<span class="cstat-no" title="statement not covered" >        if (tile &amp;&amp; isWalkable(tile.t) &amp;&amp; !seen.has(index(m, nx, ny))) {</span>
-<span class="cstat-no" title="statement not covered" >          q.push([nx, ny]);</span>
-<span class="cstat-no" title="statement not covered" >        }</span>
-<span class="cstat-no" title="statement not covered" >      }</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+    for (const [nx, ny] of neighbors(x, y)) {
+      if (nx &gt;= 0 &amp;&amp; ny &gt;= 0 &amp;&amp; nx &lt; m.width &amp;&amp; ny &lt; m.height) {
+        const tile = m.tiles.find(t =&gt; t.x === nx &amp;&amp; t.y === ny);
+        if (tile &amp;&amp; isWalkable(tile.t) &amp;&amp; !seen.has(index(m, nx, ny))) {
+          q.push([nx, ny]);
+        }
+      }
+    }
+  }
   
-<span class="cstat-no" title="statement not covered" >  return seen;</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+  return seen;
+}
 &nbsp;
 /**
  * Check if all walkable tiles in the map are connected.
@@ -358,7 +358,7 @@ export <span class="fstat-no" title="function not covered" >function hasBorderWa
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-15T00:00:07.476Z
+                at 2025-10-15T00:20:32.503Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

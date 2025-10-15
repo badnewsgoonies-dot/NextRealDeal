@@ -5,7 +5,7 @@ import { makeLogger } from '../../../src/util/Logger.js';
 import { makeAsyncQueue } from '../../../src/util/AsyncQueue.js';
 
 describe('MapManager Memory & Cleanup', () => {
-  test('cleanup after dispose()', async () => {
+  test('cleanup after destroy()', async () => {
     const mgr = new MapManager(
       { name: 'Map' },
       makeRng(999),
@@ -15,12 +15,12 @@ describe('MapManager Memory & Cleanup', () => {
     
     await mgr.initialize();
     
-    // Try to generate (will fail with "Not implemented" but exercises the queue)
+    // Try to generate (should succeed now)
     const r = await mgr.generate({ width: 32, height: 32, seed: 1 });
-    expect(r.ok).toBe(false); // Expected since not implemented yet
+    expect(r.ok).toBe(true); // Generation is now implemented
     
-    // Dispose
-    await mgr.dispose();
+    // Destroy
+    await mgr.destroy();
     
     // Check queue is empty
     const dbg = mgr.getDebugStats?.();
@@ -32,7 +32,7 @@ describe('MapManager Memory & Cleanup', () => {
     expect(mgr.getCurrentMap()).toBeNull();
   });
 
-  test('no exceptions on dispose', async () => {
+  test('no exceptions on destroy', async () => {
     const mgr = new MapManager(
       { name: 'Map' },
       makeRng(111),
@@ -41,10 +41,10 @@ describe('MapManager Memory & Cleanup', () => {
     );
     
     await mgr.initialize();
-    await expect(mgr.dispose()).resolves.not.toThrow();
+    await expect(mgr.destroy()).resolves.not.toThrow();
   });
 
-  test('multiple dispose calls are safe', async () => {
+  test('multiple destroy calls are safe', async () => {
     const mgr = new MapManager(
       { name: 'Map' },
       makeRng(222),
@@ -53,30 +53,9 @@ describe('MapManager Memory & Cleanup', () => {
     );
     
     await mgr.initialize();
-    await mgr.dispose();
-    await mgr.dispose(); // Second dispose should be safe
-    await expect(mgr.dispose()).resolves.not.toThrow();
-  });
-
-  test('reset clears current map', async () => {
-    const mgr = new MapManager(
-      { name: 'Map' },
-      makeRng(333),
-      makeLogger({ enabled: false }),
-      makeAsyncQueue()
-    );
-    
-    await mgr.initialize();
-    
-    // Verify initial state
-    expect(mgr.getCurrentMap()).toBeNull();
-    
-    // Reset
-    const result = await mgr.reset();
-    expect(result.ok).toBe(true);
-    expect(mgr.getCurrentMap()).toBeNull();
-    
-    await mgr.dispose();
+    await mgr.destroy();
+    await mgr.destroy(); // Second destroy should be safe
+    await expect(mgr.destroy()).resolves.not.toThrow();
   });
 
   test('queue empties after concurrent operations', async () => {
@@ -102,10 +81,10 @@ describe('MapManager Memory & Cleanup', () => {
       expect(dbg.queuePending).toBe(0);
     }
     
-    await mgr.dispose();
+    await mgr.destroy();
   });
 
-  test('dispose during pending operations', async () => {
+  test('destroy during pending operations', async () => {
     const mgr = new MapManager(
       { name: 'Map' },
       makeRng(555),
@@ -120,8 +99,8 @@ describe('MapManager Memory & Cleanup', () => {
       mgr.generate({ width: 32, height: 32, seed: i + 200 })
     );
     
-    // Dispose immediately (before operations complete)
-    await mgr.dispose();
+    // Destroy immediately (before operations complete)
+    await mgr.destroy();
     
     // Wait for operations to complete
     const results = await Promise.all(ops);
@@ -149,15 +128,11 @@ describe('MapManager Memory & Cleanup', () => {
     const result = await mgr.initialize();
     expect(result.ok).toBe(false); // Should fail on second init
     
-    // Reset multiple times
-    await mgr.reset();
-    await mgr.reset();
-    
     // Update multiple times
     await mgr.update(16.67);
     await mgr.update(16.67);
     
-    await mgr.dispose();
+    await mgr.destroy();
   });
 
   test('no memory leak from serialization', async () => {
@@ -196,7 +171,7 @@ describe('MapManager Memory & Cleanup', () => {
       expect(result.ok).toBe(true);
     }
     
-    await mgr.dispose();
+    await mgr.destroy();
   });
 });
 

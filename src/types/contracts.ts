@@ -166,3 +166,80 @@ export interface IMapSystem {
   deserialize(json: string): Result<MapData, string>;
 }
 
+/**
+ * Battle System Types
+ */
+
+/**
+ * Combat unit with stats
+ */
+export interface Unit {
+  readonly id: string;
+  readonly hp: number;
+  readonly maxHp: number;
+  readonly atk: number;
+  readonly def: number;
+  readonly speed: number;
+}
+
+/**
+ * Result of a single combat action
+ */
+export interface CombatResult {
+  readonly damage: number;
+  readonly finalHp: number;
+  readonly killed: boolean;
+  readonly critical: boolean;
+  readonly dodged: boolean;
+}
+
+/**
+ * Current battle state
+ */
+export interface BattleState {
+  readonly units: readonly Unit[];
+  readonly turnOrder: readonly string[]; // unit IDs in initiative order
+  readonly currentTurn: number;
+  readonly isActive: boolean;
+}
+
+/**
+ * Result of executing a full combat round
+ */
+export interface RoundResult {
+  readonly actions: readonly CombatAction[];
+  readonly unitsDefeated: readonly string[];
+  readonly battleEnded: boolean;
+  readonly winner?: 'player' | 'enemy' | 'draw';
+}
+
+/**
+ * Individual combat action in the log
+ */
+export interface CombatAction {
+  readonly type: 'attack' | 'dodge' | 'defeat';
+  readonly actorId: string;
+  readonly targetId?: string;
+  readonly damage?: number;
+  readonly critical?: boolean;
+  readonly dodged?: boolean;
+  readonly seq: number; // Deterministic sequence number (NOT timestamp)
+}
+
+/**
+ * Battle System interface
+ */
+export interface IBattleSystem {
+  // Core combat
+  attack(attackerId: string, targetId: string, signal?: AbortSignal): Promise<Result<CombatResult, string>>;
+  
+  // Battle management
+  startBattle(units: Unit[], signal?: AbortSignal): Promise<Result<BattleState, string>>;
+  executeRound(signal?: AbortSignal): Promise<Result<RoundResult, string>>;
+  endBattle(): Promise<Result<void, string>>;
+  
+  // State access
+  getBattleState(): BattleState | null;
+  getCombatLog(): readonly CombatAction[];
+}
+

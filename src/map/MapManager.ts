@@ -15,6 +15,8 @@ import type { IRng } from '../util/Rng.js';
 import type { ILogger } from '../util/Logger.js';
 import type { IAsyncQueue } from '../util/AsyncQueue.js';
 import { Ok, Err, type Result } from '../util/Result.js';
+import { validate } from '../validation/validate.js';
+import { MapGenConfigSchema } from '../map/MapValidator.js';
 import {
   type IMapSystem,
   type MapGenConfig,
@@ -30,8 +32,7 @@ export interface IMapManager extends IMapSystem {
   readonly name: string;
   initialize(): Promise<Result<void, Error>>;
   update(deltaTime: number): Promise<Result<void, Error>>;
-  reset(): Promise<Result<void, Error>>;
-  dispose(): Promise<void>;
+  destroy(): Promise<void>;
   getCurrentMap(): MapData | null;
   getDebugStats(): { queuePending: number } | undefined;
 }
@@ -39,6 +40,16 @@ export interface IMapManager extends IMapSystem {
 interface MapManagerConfig extends SystemConfig {
   defaultWidth?: number;
   defaultHeight?: number;
+}
+
+interface BSPNode {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  left?: BSPNode;
+  right?: BSPNode;
+  room?: Room;
 }
 
 /**
@@ -71,10 +82,6 @@ export class MapManager extends SystemTemplate implements IMapManager {
   // Test-Only Debug Hook
   // ========================================
 
-  /**
-   * Test-only method to inspect queue state.
-   * Returns undefined in non-test environments.
-   */
   public getDebugStats(): { queuePending: number } | undefined {
     if (process.env.NODE_ENV !== 'test') {
       return undefined;
@@ -86,10 +93,6 @@ export class MapManager extends SystemTemplate implements IMapManager {
   // IMapSystem Interface
   // ========================================
 
-  /**
-   * Generate a new map with the given configuration.
-   * Uses BSP algorithm by default.
-   */
   public async generate(
     config: MapGenConfig,
     signal?: AbortSignal
@@ -99,26 +102,110 @@ export class MapManager extends SystemTemplate implements IMapManager {
         return Err('Map generation aborted');
       }
 
-      this.logger.info('Generating map', {
-        width: config.width,
-        height: config.height,
-        seed: config.seed,
-        algorithm: config.algorithm ?? 'bsp',
-      });
+      const validationResult = validate(MapGenConfigSchema, config);
+      if (!validationResult.ok) {
+        return Err(`Invalid config: ${validationResult.error.message}`);
+      }
 
-      // TODO: Validate config
-      // TODO: Call generation algorithm
-      // TODO: Validate invariants (connectivity, spawn/exit, border walls)
-      // TODO: Store currentMap
-      // TODO: Log generation stats
-
-      return Err('Not implemented');
+      return this.generateInternal(config);
     });
   }
 
-  /**
-   * Get tile type at (x, y). Returns undefined if out of bounds.
-   */
+  private async generateInternal(config: MapGenConfig): Promise<Result<MapData, string>> {
+    const { width, height, seed, minRoomSize = 5, maxRoomSize = 15, extraLoopsPct = 12 } = config;
+
+    this.logger.info('Generating map', {
+      width, height, seed, algorithm: config.algorithm ?? 'bsp',
+    });
+
+    const tiles = this.createBlankMap(width, height);
+    const roomsResult = this.generateRooms(width, height, minRoomSize, maxRoomSize);
+    
+    if (!roomsResult.ok) {
+      return roomsResult;
+    }
+
+    const { rootNode, rooms } = roomsResult.value;
+    this.carveAllRooms(rooms, tiles, width);
+    const connectors = this.connectRooms(rootNode, tiles, width);
+    this.addExtraLoops(rooms, tiles, width, height, extraLoopsPct);
+
+    const spawnExit = this.placeSpecialTiles(rooms, tiles, width);
+    if (!spawnExit.ok) {
+      return spawnExit;
+    }
+
+    const mapData = this.createMapData(config, tiles, rooms, connectors, spawnExit.value);
+    
+    if (!this.isFullyConnected(mapData)) {
+      return Err('Generated map is not fully connected');
+    }
+
+    this.currentMap = mapData;
+    this.logger.info('Map generated successfully', {
+      seed, width, height, rooms: rooms.length, connectors: connectors.length,
+    });
+
+    return Ok(mapData);
+  }
+
+  private createBlankMap(width: number, height: number): Tile[] {
+    const tiles: Tile[] = [];
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        tiles.push({ x, y, t: TileType.Wall });
+      }
+    }
+    return tiles;
+  }
+
+  private generateRooms(
+    width: number,
+    height: number,
+    minRoomSize: number,
+    maxRoomSize: number
+  ): Result<{ rootNode: BSPNode; rooms: Room[] }, string> {
+    const rootNode: BSPNode = { x: 1, y: 1, width: width - 2, height: height - 2 };
+    const minArea = width * height;
+    const minDepth = minArea < 800 ? 2 : 3;
+    const maxDepth = minArea < 800 ? 3 : minArea < 2000 ? 4 : 5;
+    
+    this.splitNode(rootNode, 0, minDepth, maxDepth, minRoomSize, maxRoomSize);
+    const rooms = this.collectRooms(rootNode);
+    
+    if (rooms.length === 0) {
+      return Err('Failed to generate rooms');
+    }
+
+    return Ok({ rootNode, rooms });
+  }
+
+  private carveAllRooms(rooms: Room[], tiles: Tile[], width: number): void {
+    for (const room of rooms) {
+      this.carveRoom(room, tiles, width);
+    }
+  }
+
+  private createMapData(
+    config: MapGenConfig,
+    tiles: Tile[],
+    rooms: Room[],
+    connectors: Connector[],
+    spawnExit: { spawn: Position; exit: Position }
+  ): MapData {
+    return {
+      width: config.width,
+      height: config.height,
+      tiles,
+      rooms,
+      connectors,
+      spawn: spawnExit.spawn,
+      exit: spawnExit.exit,
+      seed: config.seed,
+      algorithm: config.algorithm ?? 'bsp',
+    };
+  }
+
   public getTile(data: MapData, x: number, y: number): number | undefined {
     if (x < 0 || x >= data.width || y < 0 || y >= data.height) {
       return undefined;
@@ -127,9 +214,6 @@ export class MapManager extends SystemTemplate implements IMapManager {
     return tile?.t;
   }
 
-  /**
-   * Set tile at (x, y). Returns new MapData (immutable update).
-   */
   public setTile(data: MapData, x: number, y: number, tileType: number): MapData {
     if (x < 0 || x >= data.width || y < 0 || y >= data.height) {
       throw new Error(`setTile out of bounds: (${x}, ${y})`);
@@ -145,11 +229,6 @@ export class MapManager extends SystemTemplate implements IMapManager {
     return { ...data, tiles: newTiles };
   }
 
-  /**
-   * Check if tile type is walkable.
-   * Walkable: Floor(0), Door(3), Spawn(4), Exit(5)
-   * Impassable: Wall(1), Water(2)
-   */
   public isWalkable(tileType: number): boolean {
     return (
       tileType === TileType.Floor ||
@@ -159,17 +238,10 @@ export class MapManager extends SystemTemplate implements IMapManager {
     );
   }
 
-  /**
-   * Check if all walkable tiles are connected via flood fill.
-   */
-  public isConnected(_data: MapData): boolean {
-    // TODO: Implement flood fill from spawn to verify all walkable tiles reachable
-    return false;
+  public isConnected(data: MapData): boolean {
+    return this.isFullyConnected(data);
   }
 
-  /**
-   * Serialize map to JSON string
-   */
   public serialize(data: MapData): string {
     const serializable = {
       width: data.width,
@@ -185,9 +257,6 @@ export class MapManager extends SystemTemplate implements IMapManager {
     return JSON.stringify(serializable);
   }
 
-  /**
-   * Deserialize map from JSON string
-   */
   public deserialize(json: string): Result<MapData, string> {
     try {
       const parsed = JSON.parse(json) as {
@@ -202,7 +271,6 @@ export class MapManager extends SystemTemplate implements IMapManager {
         algorithm: string;
       };
 
-      // Validate required fields exist
       if (
         typeof parsed.width !== 'number' ||
         typeof parsed.height !== 'number' ||
@@ -241,43 +309,272 @@ export class MapManager extends SystemTemplate implements IMapManager {
 
   protected async onInitialize(): Promise<void> {
     this.logger.info('Initializing MapManager');
-    // No initialization needed for map system
   }
 
   protected async onUpdate(_deltaTime: number): Promise<void> {
     // Map system is passive - no per-frame updates needed
   }
 
-  protected async onReset(): Promise<void> {
-    this.logger.info('Resetting MapManager');
+  protected async onDestroy(): Promise<void> {
+    this.logger.info('Destroying MapManager');
     this.currentMap = null;
   }
 
-  protected async onDispose(): Promise<void> {
-    this.logger.info('Disposing MapManager');
-    this.currentMap = null;
-  }
-
-  // ========================================
-  // Public Accessors
-  // ========================================
-
-  /**
-   * Get current active map (if any)
-   */
   public getCurrentMap(): MapData | null {
     return this.currentMap;
   }
 
   // ========================================
-  // Private Generation Methods (TODO)
+  // Private Generation Methods
   // ========================================
 
-  // TODO: generateBSP(config: MapGenConfig): MapData
-  // TODO: createRooms(tree: BSPNode[]): Room[]
-  // TODO: connectRooms(rooms: Room[]): Connector[]
-  // TODO: addExtraLoops(connectors: Connector[], pct: number): Connector[]
-  // TODO: placeSpawnAndExit(rooms: Room[]): { spawn: Position; exit: Position }
-  // TODO: validateInvariants(data: MapData): Result<void, string>
-  // TODO: floodFill(data: MapData, start: Position): Set<string>
+  private splitNode(
+    node: BSPNode,
+    depth: number,
+    minDepth: number,
+    maxDepth: number,
+    minRoomSize: number,
+    maxRoomSize: number
+  ): void {
+    if (depth >= maxDepth) {
+      this.placeRoomInNode(node, minRoomSize, maxRoomSize);
+      return;
+    }
+
+    const minSplitSize = minRoomSize * 2 + 3;
+    const canSplitH = node.width >= minSplitSize;
+    const canSplitV = node.height >= minSplitSize;
+
+    if (!canSplitH && !canSplitV) {
+      if (depth >= minDepth) {
+        this.placeRoomInNode(node, minRoomSize, maxRoomSize);
+      }
+      return;
+    }
+
+    const splitH = canSplitH && canSplitV ? this.rng.bool() : canSplitH;
+
+    if (splitH) {
+      const minSplit = Math.floor(node.width * 0.4);
+      const maxSplit = Math.floor(node.width * 0.6);
+      const split = this.rng.int(minSplit, maxSplit);
+
+      node.left = { x: node.x, y: node.y, width: split, height: node.height };
+      node.right = { x: node.x + split, y: node.y, width: node.width - split, height: node.height };
+    } else {
+      const minSplit = Math.floor(node.height * 0.4);
+      const maxSplit = Math.floor(node.height * 0.6);
+      const split = this.rng.int(minSplit, maxSplit);
+
+      node.left = { x: node.x, y: node.y, width: node.width, height: split };
+      node.right = { x: node.x, y: node.y + split, width: node.width, height: node.height - split };
+    }
+
+    this.splitNode(node.left, depth + 1, minDepth, maxDepth, minRoomSize, maxRoomSize);
+    this.splitNode(node.right, depth + 1, minDepth, maxDepth, minRoomSize, maxRoomSize);
+  }
+
+  private placeRoomInNode(node: BSPNode, minSize: number, maxSize: number): void {
+    const maxW = Math.min(node.width - 2, maxSize);
+    const maxH = Math.min(node.height - 2, maxSize);
+    
+    if (maxW < minSize || maxH < minSize) return;
+
+    const w = this.rng.int(minSize, maxW);
+    const h = this.rng.int(minSize, maxH);
+    const x = node.x + this.rng.int(1, node.width - w - 1);
+    const y = node.y + this.rng.int(1, node.height - h - 1);
+
+    node.room = { x, y, width: w, height: h };
+  }
+
+  private collectRooms(node: BSPNode): Room[] {
+    const rooms: Room[] = [];
+    if (node.room) {
+      rooms.push(node.room);
+    }
+    if (node.left) {
+      rooms.push(...this.collectRooms(node.left));
+    }
+    if (node.right) {
+      rooms.push(...this.collectRooms(node.right));
+    }
+    return rooms;
+  }
+
+  private carveRoom(room: Room, tiles: Tile[], width: number): void {
+    for (let y = room.y; y < room.y + room.height; y++) {
+      for (let x = room.x; x < room.x + room.width; x++) {
+        const idx = y * width + x;
+        if (tiles[idx]) {
+          tiles[idx] = { x, y, t: TileType.Floor };
+        }
+      }
+    }
+  }
+
+  private connectRooms(node: BSPNode, tiles: Tile[], width: number): Connector[] {
+    const connectors: Connector[] = [];
+    
+    if (!node.left || !node.right) return connectors;
+
+    const leftRooms = this.collectRooms(node.left);
+    const rightRooms = this.collectRooms(node.right);
+
+    if (leftRooms.length > 0 && rightRooms.length > 0) {
+      const leftRoom = leftRooms[this.rng.int(0, leftRooms.length - 1)];
+      const rightRoom = rightRooms[this.rng.int(0, rightRooms.length - 1)];
+
+      const from = this.getRoomCenter(leftRoom);
+      const to = this.getRoomCenter(rightRoom);
+      
+      this.carveCorridor(from, to, tiles, width);
+      connectors.push({ from, to, isExtra: false });
+    }
+
+    connectors.push(...this.connectRooms(node.left, tiles, width));
+    connectors.push(...this.connectRooms(node.right, tiles, width));
+
+    return connectors;
+  }
+
+  private getRoomCenter(room: Room): Position {
+    return {
+      x: room.x + Math.floor(room.width / 2),
+      y: room.y + Math.floor(room.height / 2),
+    };
+  }
+
+  private carveCorridor(from: Position, to: Position, tiles: Tile[], width: number): void {
+    if (this.rng.bool()) {
+      this.carveHorizontal(from.x, to.x, from.y, tiles, width);
+      this.carveVertical(from.y, to.y, to.x, tiles, width);
+    } else {
+      this.carveVertical(from.y, to.y, from.x, tiles, width);
+      this.carveHorizontal(from.x, to.x, to.y, tiles, width);
+    }
+  }
+
+  private carveHorizontal(x1: number, x2: number, y: number, tiles: Tile[], width: number): void {
+    for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
+      const idx = y * width + x;
+      if (tiles[idx] && tiles[idx].t === TileType.Wall) {
+        tiles[idx] = { x, y, t: TileType.Floor };
+      }
+    }
+  }
+
+  private carveVertical(y1: number, y2: number, x: number, tiles: Tile[], width: number): void {
+    for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
+      const idx = y * width + x;
+      if (tiles[idx] && tiles[idx].t === TileType.Wall) {
+        tiles[idx] = { x, y, t: TileType.Floor };
+      }
+    }
+  }
+
+  private addExtraLoops(
+    rooms: Room[],
+    tiles: Tile[],
+    width: number,
+    height: number,
+    pct: number
+  ): void {
+    const numExtra = Math.floor((rooms.length - 1) * (pct / 100));
+    
+    for (let i = 0; i < numExtra; i++) {
+      const room1 = rooms[this.rng.int(0, rooms.length - 1)];
+      const room2 = rooms[this.rng.int(0, rooms.length - 1)];
+      
+      if (room1 !== room2) {
+        const from = this.getRoomCenter(room1);
+        const to = this.getRoomCenter(room2);
+        this.carveCorridor(from, to, tiles, width);
+      }
+    }
+  }
+
+  private placeSpecialTiles(
+    rooms: Room[],
+    tiles: Tile[],
+    width: number
+  ): Result<{ spawn: Position; exit: Position }, string> {
+    if (rooms.length === 0) {
+      return Err('No rooms available for spawn/exit placement');
+    }
+
+    const spawnRoom = rooms[this.rng.int(0, rooms.length - 1)];
+    const spawn = this.getRandomFloorInRoom(spawnRoom, tiles, width);
+    
+    if (!spawn) {
+      return Err('Failed to place spawn');
+    }
+
+    tiles[spawn.y * width + spawn.x] = { ...spawn, t: TileType.Spawn };
+
+    let exitRoom = rooms[this.rng.int(0, rooms.length - 1)];
+    let attempts = 0;
+    while (exitRoom === spawnRoom && rooms.length > 1 && attempts < 10) {
+      exitRoom = rooms[this.rng.int(0, rooms.length - 1)];
+      attempts++;
+    }
+
+    const exit = this.getRandomFloorInRoom(exitRoom, tiles, width);
+    if (!exit) {
+      return Err('Failed to place exit');
+    }
+
+    tiles[exit.y * width + exit.x] = { ...exit, t: TileType.Exit };
+
+    return Ok({ spawn, exit });
+  }
+
+  private getRandomFloorInRoom(room: Room, tiles: Tile[], width: number): Position | null {
+    const candidates: Position[] = [];
+    for (let y = room.y; y < room.y + room.height; y++) {
+      for (let x = room.x; x < room.x + room.width; x++) {
+        const idx = y * width + x;
+        if (tiles[idx]?.t === TileType.Floor) {
+          candidates.push({ x, y });
+        }
+      }
+    }
+    
+    return candidates.length > 0 ? candidates[this.rng.int(0, candidates.length - 1)] : null;
+  }
+
+  private isFullyConnected(data: MapData): boolean {
+    const spawn = data.tiles.find(t => t.t === TileType.Spawn);
+    if (!spawn) return false;
+
+    const reachable = this.bfsReachable(data, spawn.x, spawn.y);
+    const walkableTiles = data.tiles.filter(t => this.isWalkable(t.t));
+
+    return walkableTiles.every(t => reachable.has(t.y * data.width + t.x));
+  }
+
+  private bfsReachable(data: MapData, sx: number, sy: number): Set<number> {
+    const seen = new Set<number>();
+    const q: [number, number][] = [[sx, sy]];
+    
+    while (q.length > 0) {
+      const [x, y] = q.shift()!;
+      const i = y * data.width + x;
+      
+      if (seen.has(i)) continue;
+      seen.add(i);
+      
+      const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
+      for (const [nx, ny] of neighbors) {
+        if (nx >= 0 && ny >= 0 && nx < data.width && ny < data.height) {
+          const tile = data.tiles.find(t => t.x === nx && t.y === ny);
+          if (tile && this.isWalkable(tile.t) && !seen.has(ny * data.width + nx)) {
+            q.push([nx, ny]);
+          }
+        }
+      }
+    }
+    
+    return seen;
+  }
 }
