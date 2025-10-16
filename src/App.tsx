@@ -8,7 +8,6 @@ import { GameProvider } from './ui/context/GameContext.js';
 import { MenuRoute } from './ui/routes/MenuRoute.js';
 import { RouteRoute } from './ui/routes/RouteRoute.js';
 import type { GameController } from './core/GameController.js';
-import './ui/styles/theme-tokens.css';
 
 interface AppProps {
   game: GameController;
