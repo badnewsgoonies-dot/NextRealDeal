@@ -11,7 +11,13 @@
 import { SystemTemplate } from './SystemTemplate.js';
 import type { ILogger } from '../util/Logger.js';
 import type { IRng } from '../util/Rng.js';
-import type { IMapSystem, IBattleSystem, IUnitSystem, IGameController } from '../types/contracts.js';
+import type { 
+  IMapSystem, 
+  IBattleSystem, 
+  IUnitSystem, 
+  IEconomySystem,
+  IGameController 
+} from '../types/contracts.js';
 import { makeAsyncQueue } from '../util/AsyncQueue.js';
 import { ok, err, type Result } from '../util/Result.js';
 
@@ -26,7 +32,8 @@ export class GameController extends SystemTemplate implements IGameController {
     private readonly rng: IRng,
     private readonly mapSystem: IMapSystem,
     private readonly battleSystem: IBattleSystem,
-    private readonly unitSystem: IUnitSystem
+    private readonly unitSystem: IUnitSystem,
+    private readonly economySystem: IEconomySystem
   ) {
     super({ name: 'GameController' });
   }
@@ -58,7 +65,13 @@ export class GameController extends SystemTemplate implements IGameController {
           return err(`unit-init-failed:${String(unitResult.error)}`);
         }
 
-        this.log.info('gc:init_ok', { map: 'ok', battle: 'ok', unit: 'ok' });
+        // Initialize Economy fourth
+        const economyResult = await this.economySystem.initialize?.(signal);
+        if (economyResult && !economyResult.ok) {
+          return err(`economy-init-failed:${String(economyResult.error)}`);
+        }
+
+        this.log.info('gc:init_ok', { map: 'ok', battle: 'ok', unit: 'ok', economy: 'ok' });
         return ok(undefined);
       }, { signal });
     } catch (e: unknown) {
@@ -78,6 +91,7 @@ export class GameController extends SystemTemplate implements IGameController {
         await this.mapSystem.update?.(dt, signal);
         await this.battleSystem.update?.(dt, signal);
         await this.unitSystem.update?.(dt, signal);
+        await this.economySystem.update?.(dt, signal);
 
         return ok(undefined);
       }, { signal });
@@ -92,7 +106,12 @@ export class GameController extends SystemTemplate implements IGameController {
   async destroy(): Promise<void> {
     try {
       await this.queue.run(async () => {
-        // Destroy in REVERSE order (Unit → Battle → Map)
+        // Destroy in REVERSE order (Economy → Unit → Battle → Map)
+        try {
+          await this.economySystem.destroy?.();
+        } catch {
+          // Continue to next system
+        }
         try {
           await this.unitSystem.destroy?.();
         } catch {
@@ -134,15 +153,20 @@ export class GameController extends SystemTemplate implements IGameController {
     return this.unitSystem;
   }
 
+  getEconomyManager(): IEconomySystem {
+    return this.economySystem;
+  }
+
   // ========================================
   // Test-Only Debug Hook
   // ========================================
 
-  getDebugStats(): { 
-    queuePending: number; 
-    mapPending: number; 
+  getDebugStats(): {
+    queuePending: number;
+    mapPending: number;
     battlePending: number;
     unitPending: number;
+    economyPending: number;
   } | undefined {
     if (process.env.NODE_ENV !== 'test') return undefined;
 
@@ -151,6 +175,7 @@ export class GameController extends SystemTemplate implements IGameController {
       mapPending: this.mapSystem.getDebugStats?.()?.queuePending ?? 0,
       battlePending: this.battleSystem.getDebugStats?.()?.queuePending ?? 0,
       unitPending: this.unitSystem.getDebugStats?.()?.queuePending ?? 0,
+      economyPending: this.economySystem.getDebugStats?.()?.queuePending ?? 0,
     };
   }
 

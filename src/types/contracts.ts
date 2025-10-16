@@ -251,11 +251,13 @@ export interface IGameController {
   getMapManager(): IMapSystem;
   getBattleManager(): IBattleSystem;
   getUnitManager(): IUnitSystem;
-  getDebugStats(): { 
-    queuePending: number; 
-    mapPending: number; 
+  getEconomyManager(): IEconomySystem;
+  getDebugStats(): {
+    queuePending: number;
+    mapPending: number;
     battlePending: number;
     unitPending: number;
+    economyPending: number;
   } | undefined;
 }
 
@@ -337,5 +339,87 @@ export interface IUnitSystem {
   
   // Battle integration
   getTeamUnits(team: 'player' | 'enemy'): readonly Unit[];
+}
+
+/**
+ * Economy System Types
+ */
+
+/**
+ * Currency (single type: gold)
+ */
+export interface Currency {
+  readonly gold: number;  // 0 to 999,999,999
+}
+
+/**
+ * Item (extends Equipment with additional properties)
+ */
+export interface Item {
+  readonly id: string;
+  readonly name: string;
+  readonly type: 'weapon' | 'armor' | 'accessory' | 'consumable';
+  readonly value: number;  // Gold value
+  readonly stats?: {
+    readonly atkBonus?: number;
+    readonly defBonus?: number;
+    readonly speedBonus?: number;
+    readonly hpRestore?: number;
+  };
+}
+
+/**
+ * Loot drop configuration
+ */
+export interface ItemDrop {
+  readonly itemId: string;
+  readonly probability: number;  // 0-100
+}
+
+/**
+ * Shop item configuration
+ */
+export interface ShopInventory {
+  readonly itemId: string;
+  readonly stock: number;  // -1 = infinite
+  readonly price: number;
+}
+
+/**
+ * Player's complete inventory
+ */
+export interface PlayerInventory {
+  readonly currency: Currency;
+  readonly items: readonly Item[];
+}
+
+/**
+ * Economy System interface
+ */
+export interface IEconomySystem {
+  // Currency management
+  modifyCurrency(playerId: string, delta: number, signal?: AbortSignal): Promise<Result<Currency, string>>;
+  getCurrency(playerId: string): Currency;
+  
+  // Item management
+  grantItem(playerId: string, item: Item, signal?: AbortSignal): Promise<Result<void, string>>;
+  removeItem(playerId: string, itemId: string, signal?: AbortSignal): Promise<Result<void, string>>;
+  getInventory(playerId: string): PlayerInventory;
+  
+  // Shop system
+  purchaseItem(playerId: string, itemId: string, signal?: AbortSignal): Promise<Result<Item, string>>;
+  sellItem(playerId: string, itemId: string, signal?: AbortSignal): Promise<Result<number, string>>;
+  getShopInventory(): readonly ShopInventory[];
+  
+  // Loot system
+  rollLoot(dropTable: ItemDrop[], signal?: AbortSignal): Promise<Result<Item | null, string>>;
+  
+  // Battle rewards
+  awardBattleReward(
+    playerId: string,
+    goldReward: number,
+    itemDrops: ItemDrop[],
+    signal?: AbortSignal
+  ): Promise<Result<{ gold: number; items: Item[] }, string>>;
 }
 
