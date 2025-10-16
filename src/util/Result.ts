@@ -12,6 +12,10 @@ export const Ok = <T>(value: T): Result<T, never> => ({ ok: true, value });
 
 export const Err = <E>(error: E): Result<never, E> => ({ ok: false, error });
 
+// Lowercase aliases for convenience
+export const ok = Ok;
+export const err = Err;
+
 export const isOk = <T, E>(result: Result<T, E>): result is { ok: true; value: T } =>
   result.ok === true;
 

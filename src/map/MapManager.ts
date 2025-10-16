@@ -10,11 +10,12 @@
  * - Support for 64×64 grids (configurable 16-128, even numbers only)
  */
 
-import { SystemTemplate, type SystemConfig } from '../core/SystemTemplate.js';
+import { SystemTemplate } from '../core/SystemTemplate.js';
 import type { IRng } from '../util/Rng.js';
 import type { ILogger } from '../util/Logger.js';
 import type { IAsyncQueue } from '../util/AsyncQueue.js';
-import { Ok, Err, type Result } from '../util/Result.js';
+import { ok, err, type Result } from '../util/Result.js';
+import { makeAsyncQueue } from '../util/AsyncQueue.js';
 import { validate } from '../validation/validate.js';
 import { MapGenConfigSchema } from '../map/MapValidator.js';
 import {
@@ -37,11 +38,6 @@ export interface IMapManager extends IMapSystem {
   getDebugStats(): { queuePending: number } | undefined;
 }
 
-interface MapManagerConfig extends SystemConfig {
-  defaultWidth?: number;
-  defaultHeight?: number;
-}
-
 interface BSPNode {
   x: number;
   y: number;
@@ -56,26 +52,15 @@ interface BSPNode {
  * MapManager implementation
  */
 export class MapManager extends SystemTemplate implements IMapManager {
-  private readonly rng: IRng;
-  private readonly logger: ILogger;
   private readonly queue: IAsyncQueue;
-  private readonly defaultWidth: number;
-  private readonly defaultHeight: number;
-  
   private currentMap: MapData | null = null;
 
   constructor(
-    config: MapManagerConfig,
-    rng: IRng,
-    logger: ILogger,
-    queue: IAsyncQueue
+    protected readonly log: ILogger,
+    private readonly rng: IRng
   ) {
-    super(config);
-    this.rng = rng.fork('map');
-    this.logger = logger.child({ system: 'Map' });
-    this.queue = queue;
-    this.defaultWidth = config.defaultWidth ?? 64;
-    this.defaultHeight = config.defaultHeight ?? 64;
+    super({ name: 'Map' });
+    this.queue = makeAsyncQueue();
   }
 
   // ========================================
@@ -99,12 +84,12 @@ export class MapManager extends SystemTemplate implements IMapManager {
   ): Promise<Result<MapData, string>> {
     return this.queue.enqueue(async () => {
       if (signal?.aborted) {
-        return Err('Map generation aborted');
+        return err('Map generation aborted');
       }
 
       const validationResult = validate(MapGenConfigSchema, config);
       if (!validationResult.ok) {
-        return Err(`Invalid config: ${validationResult.error.message}`);
+        return err(`Invalid config: ${validationResult.error.message}`);
       }
 
       return this.generateInternal(config);
@@ -112,9 +97,9 @@ export class MapManager extends SystemTemplate implements IMapManager {
   }
 
   private async generateInternal(config: MapGenConfig): Promise<Result<MapData, string>> {
-    const { width, height, seed, minRoomSize = 5, maxRoomSize = 15, extraLoopsPct = 12 } = config;
+      const { width, height, seed, minRoomSize = 5, maxRoomSize = 15, extraLoopsPct = 12 } = config;
 
-    this.logger.info('Generating map', {
+    this.log.info('map:generating', {
       width, height, seed, algorithm: config.algorithm ?? 'bsp',
     });
 
@@ -138,15 +123,15 @@ export class MapManager extends SystemTemplate implements IMapManager {
     const mapData = this.createMapData(config, tiles, rooms, connectors, spawnExit.value);
     
     if (!this.isFullyConnected(mapData)) {
-      return Err('Generated map is not fully connected');
+      return err('Generated map is not fully connected');
     }
 
     this.currentMap = mapData;
-    this.logger.info('Map generated successfully', {
+    this.log.info('map:generated', {
       seed, width, height, rooms: rooms.length, connectors: connectors.length,
     });
 
-    return Ok(mapData);
+    return ok(mapData);
   }
 
   private createBlankMap(width: number, height: number): Tile[] {
@@ -174,10 +159,10 @@ export class MapManager extends SystemTemplate implements IMapManager {
     const rooms = this.collectRooms(rootNode);
     
     if (rooms.length === 0) {
-      return Err('Failed to generate rooms');
+      return err('Failed to generate rooms');
     }
 
-    return Ok({ rootNode, rooms });
+    return ok({ rootNode, rooms });
   }
 
   private carveAllRooms(rooms: Room[], tiles: Tile[], width: number): void {
@@ -282,7 +267,7 @@ export class MapManager extends SystemTemplate implements IMapManager {
         typeof parsed.seed !== 'number' ||
         typeof parsed.algorithm !== 'string'
       ) {
-        return Err('Invalid map data structure');
+        return err('Invalid map data structure');
       }
 
       const data: MapData = {
@@ -297,9 +282,9 @@ export class MapManager extends SystemTemplate implements IMapManager {
         algorithm: parsed.algorithm,
       };
 
-      return Ok(data);
-    } catch (err) {
-      return Err(`Failed to deserialize map: ${String(err)}`);
+      return ok(data);
+    } catch (e) {
+      return err(`Failed to deserialize map: ${String(e)}`);
     }
   }
 
@@ -308,7 +293,7 @@ export class MapManager extends SystemTemplate implements IMapManager {
   // ========================================
 
   protected async onInitialize(): Promise<void> {
-    this.logger.info('Initializing MapManager');
+    this.log.info('map:init', {});
   }
 
   protected async onUpdate(_deltaTime: number): Promise<void> {
@@ -316,7 +301,7 @@ export class MapManager extends SystemTemplate implements IMapManager {
   }
 
   protected async onDestroy(): Promise<void> {
-    this.logger.info('Destroying MapManager');
+    this.log.info('map:destroy', {});
     this.currentMap = null;
   }
 
@@ -500,14 +485,14 @@ export class MapManager extends SystemTemplate implements IMapManager {
     width: number
   ): Result<{ spawn: Position; exit: Position }, string> {
     if (rooms.length === 0) {
-      return Err('No rooms available for spawn/exit placement');
+      return err('No rooms available for spawn/exit placement');
     }
 
     const spawnRoom = rooms[this.rng.int(0, rooms.length - 1)];
     const spawn = this.getRandomFloorInRoom(spawnRoom, tiles, width);
     
     if (!spawn) {
-      return Err('Failed to place spawn');
+      return err('Failed to place spawn');
     }
 
     tiles[spawn.y * width + spawn.x] = { ...spawn, t: TileType.Spawn };
@@ -521,12 +506,12 @@ export class MapManager extends SystemTemplate implements IMapManager {
 
     const exit = this.getRandomFloorInRoom(exitRoom, tiles, width);
     if (!exit) {
-      return Err('Failed to place exit');
+      return err('Failed to place exit');
     }
 
     tiles[exit.y * width + exit.x] = { ...exit, t: TileType.Exit };
 
-    return Ok({ spawn, exit });
+    return ok({ spawn, exit });
   }
 
   private getRandomFloorInRoom(room: Room, tiles: Tile[], width: number): Position | null {

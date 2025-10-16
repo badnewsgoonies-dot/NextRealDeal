@@ -26,6 +26,50 @@ const levelPriority: Record<LogLevel, number> = {
   error: 3,
 };
 
+/**
+ * Simple console logger for tests and scripts.
+ */
+export class ConsoleLogger implements ILogger {
+  constructor(private minLevel: LogLevel = 'info') {}
+
+  debug(message: string, context?: Record<string, unknown>): void {
+    if (this.shouldLog('debug')) {
+      this.log('debug', message, context);
+    }
+  }
+
+  info(message: string, context?: Record<string, unknown>): void {
+    if (this.shouldLog('info')) {
+      this.log('info', message, context);
+    }
+  }
+
+  warn(message: string, context?: Record<string, unknown>): void {
+    if (this.shouldLog('warn')) {
+      this.log('warn', message, context);
+    }
+  }
+
+  error(message: string, context?: Record<string, unknown>): void {
+    if (this.shouldLog('error')) {
+      this.log('error', message, context);
+    }
+  }
+
+  child(_context: Record<string, unknown>): ILogger {
+    return new ConsoleLogger(this.minLevel);
+  }
+
+  private shouldLog(level: LogLevel): boolean {
+    return levelPriority[level] >= levelPriority[this.minLevel];
+  }
+
+  private log(level: LogLevel, message: string, context?: Record<string, unknown>): void {
+    const contextStr = context ? ` ${JSON.stringify(context)}` : '';
+    console.error(`[${level.toUpperCase()}] ${message}${contextStr}`);
+  }
+}
+
 export const makeLogger = (config: Partial<LoggerConfig> = {}): ILogger => {
   const { 
     minLevel = 'info', 
