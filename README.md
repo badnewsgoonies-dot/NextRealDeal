@@ -7,6 +7,8 @@
 [![TypeScript](https://img.shields.io/badge/typescript-5.5%2B-blue)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
+> 🤖 **For AI Assistants**: See [COPILOT_BACKGROUND.md](./COPILOT_BACKGROUND.md) for comprehensive project architecture, patterns, and how to work with this codebase.
+
 ---
 
 ## 🎮 Overview
@@ -114,6 +116,7 @@ Quality:        0 bugs, 0 tech debt
 
 ## 📚 Documentation
 
+- **[COPILOT_BACKGROUND.md](./COPILOT_BACKGROUND.md)** - **Comprehensive background for AI assistants** (architecture, patterns, systems, how to extend)
 - **[API.md](./API.md)** - Complete API reference
 - **[EXAMPLES.md](./EXAMPLES.md)** - Discord bot, CLI, REST API examples
 - **[CHANGELOG.md](./CHANGELOG.md)** - Version history and features
