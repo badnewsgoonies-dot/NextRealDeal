@@ -252,12 +252,14 @@ export interface IGameController {
   getBattleManager(): IBattleSystem;
   getUnitManager(): IUnitSystem;
   getEconomyManager(): IEconomySystem;
+  getRouteManager(): IRouteSystem;
   getDebugStats(): {
     queuePending: number;
     mapPending: number;
     battlePending: number;
     unitPending: number;
     economyPending: number;
+    routePending: number;
   } | undefined;
 }
 
@@ -421,5 +423,92 @@ export interface IEconomySystem {
     itemDrops: ItemDrop[],
     signal?: AbortSignal
   ): Promise<Result<{ gold: number; items: Item[] }, string>>;
+}
+
+/**
+ * Route System Types (Meta-Map)
+ */
+
+/**
+ * Route error codes (typed union for safety)
+ */
+export const ROUTE_ERR = {
+  Aborted: 'aborted',
+  NoRun: 'no-run',
+  RunActive: 'run-active',
+  InvalidChoice: 'invalid-choice',
+  StaleStep: 'stale-step',
+  Finished: 'finished',
+  Internal: 'internal-error',
+  UnsupportedVersion: 'unsupported-version',
+  InvalidState: 'invalid-state',
+  DeserializationFailed: 'deserialization-failed',
+  InvalidRunId: 'invalid-runId',
+  InvalidSeed: 'invalid-seed',
+} as const;
+
+export type RouteError = typeof ROUTE_ERR[keyof typeof ROUTE_ERR];
+
+/**
+ * Run state
+ */
+export interface RunState {
+  readonly runId: string;
+  readonly seed: string;           // Always string (normalize numbers)
+  readonly step: number;           // 0-10,000
+  readonly history: readonly Choice[];
+}
+
+/**
+ * Choice node in route
+ */
+export interface Choice {
+  readonly id: string;             // runId:s{step}:i{idx}:lbl{label}
+  readonly step: number;
+  readonly type: 'battle';         // v1: battles only
+  readonly label: 'A' | 'B' | 'C';
+  readonly arenaSeed: number;      // For MapManager.generate()
+  readonly arenaHint: {
+    readonly width: number;        // Even number
+    readonly height: number;       // Even number
+  };
+}
+
+/**
+ * Result of choosing
+ */
+export interface Chosen {
+  readonly step: number;
+  readonly choice: Choice;
+}
+
+/**
+ * Run pointer (current position)
+ */
+export interface RunPointer {
+  readonly runId: string;
+  readonly step: number;
+}
+
+/**
+ * Route System interface
+ */
+export interface IRouteSystem {
+  startRun(
+    runId: string,
+    seed: number | string,
+    signal?: AbortSignal,
+    opts?: { force?: boolean }
+  ): Promise<Result<RunState, RouteError>>;
+
+  endRun(signal?: AbortSignal): Promise<Result<void, RouteError>>;
+  getChoices(signal?: AbortSignal): Promise<Result<readonly Choice[], RouteError>>;
+  choose(choiceId: string, signal?: AbortSignal): Promise<Result<Chosen, RouteError>>;
+
+  current(): RunPointer | null;
+  history(): readonly Choice[];
+
+  serialize(): string;
+  deserialize(json: string): Result<void, RouteError>;
 }
 

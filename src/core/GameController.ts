@@ -11,12 +11,13 @@
 import { SystemTemplate } from './SystemTemplate.js';
 import type { ILogger } from '../util/Logger.js';
 import type { IRng } from '../util/Rng.js';
-import type { 
-  IMapSystem, 
-  IBattleSystem, 
-  IUnitSystem, 
+import type {
+  IMapSystem,
+  IBattleSystem,
+  IUnitSystem,
   IEconomySystem,
-  IGameController 
+  IRouteSystem,
+  IGameController
 } from '../types/contracts.js';
 import { makeAsyncQueue } from '../util/AsyncQueue.js';
 import { ok, err, type Result } from '../util/Result.js';
@@ -33,7 +34,8 @@ export class GameController extends SystemTemplate implements IGameController {
     private readonly mapSystem: IMapSystem,
     private readonly battleSystem: IBattleSystem,
     private readonly unitSystem: IUnitSystem,
-    private readonly economySystem: IEconomySystem
+    private readonly economySystem: IEconomySystem,
+    private readonly routeSystem: IRouteSystem
   ) {
     super({ name: 'GameController' });
   }
@@ -71,7 +73,13 @@ export class GameController extends SystemTemplate implements IGameController {
           return err(`economy-init-failed:${String(economyResult.error)}`);
         }
 
-        this.log.info('gc:init_ok', { map: 'ok', battle: 'ok', unit: 'ok', economy: 'ok' });
+        // Initialize Route fifth
+        const routeResult = await this.routeSystem.initialize?.(signal);
+        if (routeResult && !routeResult.ok) {
+          return err(`route-init-failed:${String(routeResult.error)}`);
+        }
+
+        this.log.info('gc:init_ok', { map: 'ok', battle: 'ok', unit: 'ok', economy: 'ok', route: 'ok' });
         return ok(undefined);
       }, { signal });
     } catch (e: unknown) {
@@ -92,6 +100,7 @@ export class GameController extends SystemTemplate implements IGameController {
         await this.battleSystem.update?.(dt, signal);
         await this.unitSystem.update?.(dt, signal);
         await this.economySystem.update?.(dt, signal);
+        await this.routeSystem.update?.(dt, signal);
 
         return ok(undefined);
       }, { signal });
@@ -106,7 +115,12 @@ export class GameController extends SystemTemplate implements IGameController {
   async destroy(): Promise<void> {
     try {
       await this.queue.run(async () => {
-        // Destroy in REVERSE order (Economy → Unit → Battle → Map)
+        // Destroy in REVERSE order (Route → Economy → Unit → Battle → Map)
+        try {
+          await this.routeSystem.destroy?.();
+        } catch {
+          // Continue to next system
+        }
         try {
           await this.economySystem.destroy?.();
         } catch {
@@ -157,6 +171,10 @@ export class GameController extends SystemTemplate implements IGameController {
     return this.economySystem;
   }
 
+  getRouteManager(): IRouteSystem {
+    return this.routeSystem;
+  }
+
   // ========================================
   // Test-Only Debug Hook
   // ========================================
@@ -167,6 +185,7 @@ export class GameController extends SystemTemplate implements IGameController {
     battlePending: number;
     unitPending: number;
     economyPending: number;
+    routePending: number;
   } | undefined {
     if (process.env.NODE_ENV !== 'test') return undefined;
 
@@ -176,6 +195,7 @@ export class GameController extends SystemTemplate implements IGameController {
       battlePending: this.battleSystem.getDebugStats?.()?.queuePending ?? 0,
       unitPending: this.unitSystem.getDebugStats?.()?.queuePending ?? 0,
       economyPending: this.economySystem.getDebugStats?.()?.queuePending ?? 0,
+      routePending: this.routeSystem.getDebugStats?.()?.queuePending ?? 0,
     };
   }
 
