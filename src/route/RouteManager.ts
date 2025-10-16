@@ -29,6 +29,8 @@ import {
   ROUTE_ERR,
 } from '../types/contracts.js';
 
+const ROUTE_VERSION = 'v1' as const;  // ✅ Single source of truth
+
 export interface IRouteManager extends IRouteSystem {
   readonly name: string;
   initialize(): Promise<Result<void, Error>>;
@@ -60,7 +62,7 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
   ) {
     super({ name: 'Route' });
     this.queue = makeAsyncQueue();
-    this.routeRngRoot = rng.fork('route:v1');
+    this.routeRngRoot = rng.fork(`route:${ROUTE_VERSION}`);
   }
 
   // ========================================
@@ -168,16 +170,16 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
         if (!this.state || !this.runRng) return err(ROUTE_ERR.NoRun);
         if (this.state.step >= 10000) return err(ROUTE_ERR.Finished);
 
-        if (!this.choicesCache) {
-          this.choicesCache = this._buildChoicesInternal(this.state);
-        }
+        // ✅ Safer narrowing + better logging
+        const wasCached = !!this.choicesCache;
+        const cache = this.choicesCache ?? (this.choicesCache = this._buildChoicesInternal(this.state));
 
         this.log.info('route:choices_retrieved', {
           step: this.state.step,
-          cached: true,
+          fromCache: wasCached,
         });
 
-        return ok(this.choicesCache);
+        return ok(cache);
       }, { signal });
     } catch (e: unknown) {
       const error = e as { name?: string; message?: string };
@@ -218,7 +220,7 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
           nextStep: this.state.step,
           choiceLabel: choice.label,
           arenaSeed: choice.arenaSeed,
-          version: 'v1',
+          version: ROUTE_VERSION,
         });
 
         return ok({ step: this.state.step, choice });
@@ -242,16 +244,16 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
 
   public serialize(): string {
     if (!this.state) {
-      return JSON.stringify({ version: 'v1', state: null });
+      return JSON.stringify({ version: ROUTE_VERSION, state: null });
     }
-    return JSON.stringify({ version: 'v1', state: this.state });
+    return JSON.stringify({ version: ROUTE_VERSION, state: this.state });
   }
 
   public deserialize(json: string): Result<void, RouteError> {
     try {
       const parsed = JSON.parse(json) as { version: string; state: unknown };
 
-      if (parsed.version !== 'v1') {
+      if (parsed.version !== ROUTE_VERSION) {
         return err(ROUTE_ERR.UnsupportedVersion);
       }
 
@@ -268,7 +270,7 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
       }
 
       this.state = validation.value;
-      this.runRng = this.routeRngRoot.fork(`run#${this.state.runId}:${this.state.seed}:v1`);
+      this.runRng = this.routeRngRoot.fork(`run#${this.state.runId}:${this.state.seed}:${ROUTE_VERSION}`);
       this.choicesCache = null;
 
       this.log.info('route:deserialized', {
@@ -288,7 +290,7 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
   // ========================================
 
   protected async onInitialize(): Promise<void> {
-    this.log.info('route:init', { version: 'v1' });
+    this.log.info('route:init', { version: ROUTE_VERSION });
   }
 
   protected async onUpdate(_deltaTime: number): Promise<void> {
@@ -313,13 +315,31 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
   // Internal Methods (pure, non-throwing)
   // ========================================
 
+  /**
+   * Centralized arena hint with even-dimension guarantee.
+   */
+  private _arenaHint(): { width: number; height: number } {
+    const clampEven = (n: number): number => Math.max(16, Math.min(128, n & ~1));
+    return { width: clampEven(48), height: clampEven(48) };
+  }
+
+  /**
+   * Build 3 choices with guaranteed unique arena seeds.
+   */
   private _buildChoicesInternal(state: RunState): Choice[] {
-    const stepRng = this.runRng!.fork(`step#${state.step}:v1`);
-    const choices: Choice[] = [];
+    const stepRng = this.runRng!.fork(`step#${state.step}:${ROUTE_VERSION}`);
     const labels: Array<'A' | 'B' | 'C'> = ['A', 'B', 'C'];
+    const seen = new Set<number>();
+    const hint = this._arenaHint();
+    const choices: Choice[] = [];
 
     for (let i = 0; i < 3; i++) {
-      const arenaSeed = stepRng.int(1, 2147483647);
+      // ✅ Guarantee unique arena seeds
+      let arenaSeed: number;
+      do {
+        arenaSeed = stepRng.int(1, 2147483647);
+      } while (seen.has(arenaSeed));
+      seen.add(arenaSeed);
 
       choices.push({
         id: `${state.runId}:s${state.step}:i${i}:lbl${labels[i]}`,
@@ -327,7 +347,7 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
         type: 'battle',
         label: labels[i],
         arenaSeed,
-        arenaHint: { width: 48, height: 48 },
+        arenaHint: hint,
       });
     }
 

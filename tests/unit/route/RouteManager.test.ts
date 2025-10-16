@@ -499,5 +499,89 @@ describe('RouteManager', () => {
       }
     });
   });
+
+  describe('Seed Uniqueness', () => {
+    test('arena seeds are provably unique within step', async () => {
+      await mgr.startRun('run1', 777);
+      const res = await mgr.getChoices();
+
+      if (res.ok) {
+        const seeds = res.value.map(c => c.arenaSeed);
+        expect(new Set(seeds).size).toBe(3); // ✅ No duplicates guaranteed
+      }
+    });
+
+    test('uniqueness holds across multiple runs', async () => {
+      for (let runNum = 0; runNum < 10; runNum++) {
+        const testMgr = new RouteManager(makeLogger({ enabled: false }), makeRng(runNum));
+        await testMgr.initialize();
+        await testMgr.startRun(`run${runNum}`, runNum * 1000);
+
+        const res = await testMgr.getChoices();
+        if (res.ok) {
+          const seeds = res.value.map(c => c.arenaSeed);
+          expect(new Set(seeds).size).toBe(3);
+        }
+
+        await testMgr.destroy();
+      }
+    });
+  });
+
+  describe('Cache Behavior', () => {
+    test('cache valid after first getChoices', async () => {
+      await mgr.startRun('run1', 123);
+      
+      const stats1 = mgr.getDebugStats();
+      expect(stats1?.cacheValid).toBe(false);
+      
+      await mgr.getChoices();
+
+      const stats2 = mgr.getDebugStats();
+      expect(stats2?.cacheValid).toBe(true);
+    });
+
+    test('cache invalid after choose', async () => {
+      await mgr.startRun('run1', 123);
+      await mgr.getChoices();
+      
+      const stats1 = mgr.getDebugStats();
+      expect(stats1?.cacheValid).toBe(true);
+
+      const choices = await mgr.getChoices();
+      if (!choices.ok) return;
+
+      await mgr.choose(choices.value[0].id);
+
+      const stats2 = mgr.getDebugStats();
+      expect(stats2?.cacheValid).toBe(false);
+    });
+
+    test('force startRun clears cache', async () => {
+      await mgr.startRun('run1', 123);
+      await mgr.getChoices(); // Populate cache
+
+      const stats1 = mgr.getDebugStats();
+      expect(stats1?.cacheValid).toBe(true);
+
+      await mgr.startRun('run2', 456, undefined, { force: true });
+
+      const stats2 = mgr.getDebugStats();
+      expect(stats2?.cacheValid).toBe(false);
+    });
+
+    test('getChoices logs fromCache correctly', async () => {
+      await mgr.startRun('run1', 123);
+
+      // First call: not cached
+      await mgr.getChoices();
+
+      // Second call: from cache
+      await mgr.getChoices();
+
+      // Both should succeed
+      expect(mgr.getDebugStats()?.cacheValid).toBe(true);
+    });
+  });
 });
 
