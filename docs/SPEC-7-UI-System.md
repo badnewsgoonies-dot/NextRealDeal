@@ -17,6 +17,30 @@ The UI System provides visual representation and player interaction for NextReal
 - Platform-agnostic (Canvas API, works in browser/Electron)
 - Deterministic rendering (same state = same visuals)
 
+### Visual Evolution Path
+
+**v1.2 (MVP - Functional 2D):**
+- Top-down orthographic grid view (simple, clear)
+- 32×32 tiles and units (colored rectangles with icons)
+- Basic HP bars, minimal effects
+- Functional over beautiful (establish patterns first)
+
+**v2.0 (Enhanced 2D - Character & Polish):**
+- Character sprites with personality (inspired by playful roguelikes)
+- Unit portraits and detailed stats panels
+- Action buttons (Attack, Spells, Items, Defend)
+- Particle effects, damage numbers, smooth animations
+- Resource bars (HP, MP if added to game systems)
+
+**v3.0+ (Isometric Tactical - Aspirational):**
+- Isometric projection (3D-style tactical view like Triangle Strategy, Fire Emblem)
+- Detailed character art with shadows and depth
+- Multiple UI panels (enemy list, hero roster, detailed portrait)
+- Professional JRPG-quality polish
+- Advanced effects (screen shake, combat zoom, cinematic attacks)
+
+**Design Note:** Start simple (v1.2), prove the patterns work, then enhance visuals incrementally. Don't block shipping on art quality—functional first, beautiful later.
+
 ---
 
 ## Architecture
@@ -1188,9 +1212,66 @@ for (const cmd of commandQueue) {
 
 ---
 
+## Visual Reference Notes (From Aspirational Mockups)
+
+### Key UI Elements to Eventually Include
+
+**From Reference Images:**
+
+**Battle View Components:**
+- ✅ Unit info boxes (corners) - Show enemy/hero count, HP bars
+- ✅ Character portrait panel - Detailed view of selected unit (HP/MP bars, stats)
+- ✅ Action button bar - Attack, Spells, Items, Defend (bottom-right)
+- ✅ Turn indicator - Visual marker on active unit
+- ✅ Team positioning - Clear visual separation of player vs enemy
+
+**Visual Enhancements (Long-Term):**
+- Isometric perspective (v3.0+)
+- Character shadows and depth
+- Smooth attack animations
+- Screen effects (shake on hit, flash on crit)
+- Cinematic camera (zoom to unit on their turn)
+
+**UI Panel Layouts:**
+- Top-left: Enemy roster (compact unit list)
+- Top-right: Hero roster (player party list)
+- Bottom-left: Selected unit detail (portrait, stats, bars)
+- Bottom-right: Action menu (4-button grid)
+- Center: Tactical grid (main gameplay area)
+
+**Color Coding:**
+- Player team: Blue/cyan HP bars and outlines
+- Enemy team: Red HP bars and outlines
+- Selected unit: Yellow outline/glow
+- Neutral: White/gray
+
+**Action Button Styling:**
+- Primary action (Attack): Red/prominent
+- Secondary actions (Spells, Items): Gray/neutral
+- Defensive action (Defend): Blue/subdued
+- Disabled state: Grayed out with lower opacity
+
+### Implementation Priority
+
+**v1.2 MVP (Ship First):**
+- Focus on **functionality** over visual fidelity
+- Simple top-down 2D (easier to implement)
+- Colored rectangles acceptable (no art blocker)
+- Minimal HUD (essential info only)
+
+**v2.0+ Enhancements:**
+- Add sprites, portraits, detailed panels
+- Gradually move toward aspirational quality
+- Each version adds visual polish
+- Art can be commissioned as budget allows
+
+**Guiding Principle:** "Make it work, make it right, make it beautiful" - in that order.
+
+---
+
 **Files created:**
 - ✅ ROADMAP.md - Complete product roadmap
-- ✅ docs/SPEC-7-UI-System.md - Detailed UI system design
+- ✅ docs/SPEC-7-UI-System.md - Detailed UI system design with visual evolution path
 
-**Ready for v1.0 release and v1.1/v1.2 planning!** 🚀
+**Ready for v1.0 release and future UI development!** 🚀
 
