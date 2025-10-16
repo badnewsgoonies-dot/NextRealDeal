@@ -1,10 +1,22 @@
 {
-  "name": "ts-game-project",
-  "version": "0.1.0",
-  "description": "Turn-based tactical game with deterministic simulation",
+  "name": "nextrealdeal",
+  "version": "1.0.0",
+  "description": "Production-ready headless game engine for battle-first roguelikes with deterministic gameplay, cross-platform save/load, and comprehensive testing",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "API.md",
+    "EXAMPLES.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -14,15 +26,34 @@
     "deps": "depcruise --config .dependency-cruiser.cjs src/",
     "ci": "npm run lint && npm run circular && npm run deps && npm run test:coverage",
     "perf": "tsx scripts/perf.ts",
-    "gen": "plop"
+    "gen": "plop",
+    "demo": "tsx examples/simple-demo/demo.ts"
   },
   "keywords": [
-    "game",
+    "game-engine",
+    "roguelike",
     "typescript",
-    "tactical"
+    "deterministic",
+    "turn-based",
+    "tactical",
+    "headless",
+    "battle-tower",
+    "slay-the-spire",
+    "procedural-generation",
+    "game-development",
+    "bsp",
+    "save-system"
   ],
-  "author": "",
+  "author": "NextRealDeal Contributors",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/NextRealDeal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/NextRealDeal/issues"
+  },
+  "homepage": "https://github.com/yourusername/NextRealDeal#readme",
   "dependencies": {
     "pure-rand": "^6.1.0",
     "valibot": "^0.42.1"

@@ -39,9 +39,9 @@ export default [
       'no-console': 'error',
     },
   },
-  // Allow console in Logger and scripts
+  // Allow console in Logger, scripts, and examples
   {
-    files: ['src/util/Logger.ts', 'scripts/**/*.ts'],
+    files: ['src/util/Logger.ts', 'scripts/**/*.ts', 'examples/**/*.ts'],
     rules: {
       'no-console': 'off',
     },
