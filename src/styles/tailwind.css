@@ -3,9 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Focus ring for accessibility */
+/* Accessible focus ring using utilities (no theme() call) */
 :focus-visible {
-  outline: 2px dashed theme('colors.blue.500');
+  @apply outline-2 outline-dashed outline-blue-500;
   outline-offset: 2px;
 }
 
