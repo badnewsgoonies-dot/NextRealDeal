@@ -17,6 +17,7 @@ import type {
   IUnitSystem,
   IEconomySystem,
   IRouteSystem,
+  ISaveSystem,
   IGameController
 } from '../types/contracts.js';
 import { makeAsyncQueue } from '../util/AsyncQueue.js';
@@ -35,7 +36,8 @@ export class GameController extends SystemTemplate implements IGameController {
     private readonly battleSystem: IBattleSystem,
     private readonly unitSystem: IUnitSystem,
     private readonly economySystem: IEconomySystem,
-    private readonly routeSystem: IRouteSystem
+    private readonly routeSystem: IRouteSystem,
+    private readonly saveSystem: ISaveSystem
   ) {
     super({ name: 'GameController' });
   }
@@ -79,7 +81,15 @@ export class GameController extends SystemTemplate implements IGameController {
           return err(`route-init-failed:${String(routeResult.error)}`);
         }
 
-        this.log.info('gc:init_ok', { map: 'ok', battle: 'ok', unit: 'ok', economy: 'ok', route: 'ok' });
+        // Initialize Save sixth
+        const saveResult = await this.saveSystem.initialize?.(signal);
+        if (saveResult && !saveResult.ok) {
+          return err(`save-init-failed:${String(saveResult.error)}`);
+        }
+
+        this.log.info('gc:init_ok', { 
+          map: 'ok', battle: 'ok', unit: 'ok', economy: 'ok', route: 'ok', save: 'ok' 
+        });
         return ok(undefined);
       }, { signal });
     } catch (e: unknown) {
@@ -101,6 +111,7 @@ export class GameController extends SystemTemplate implements IGameController {
         await this.unitSystem.update?.(dt, signal);
         await this.economySystem.update?.(dt, signal);
         await this.routeSystem.update?.(dt, signal);
+        await this.saveSystem.update?.(dt, signal);
 
         return ok(undefined);
       }, { signal });
@@ -115,7 +126,12 @@ export class GameController extends SystemTemplate implements IGameController {
   async destroy(): Promise<void> {
     try {
       await this.queue.run(async () => {
-        // Destroy in REVERSE order (Route → Economy → Unit → Battle → Map)
+        // Destroy in REVERSE order (Save → Route → Economy → Unit → Battle → Map)
+        try {
+          await this.saveSystem.destroy?.();
+        } catch {
+          // Continue to next system
+        }
         try {
           await this.routeSystem.destroy?.();
         } catch {
@@ -175,6 +191,10 @@ export class GameController extends SystemTemplate implements IGameController {
     return this.routeSystem;
   }
 
+  getSaveManager(): ISaveSystem {
+    return this.saveSystem;
+  }
+
   // ========================================
   // Test-Only Debug Hook
   // ========================================
@@ -186,6 +206,7 @@ export class GameController extends SystemTemplate implements IGameController {
     unitPending: number;
     economyPending: number;
     routePending: number;
+    savePending: number;
   } | undefined {
     if (process.env.NODE_ENV !== 'test') return undefined;
 
@@ -196,6 +217,7 @@ export class GameController extends SystemTemplate implements IGameController {
       unitPending: this.unitSystem.getDebugStats?.()?.queuePending ?? 0,
       economyPending: this.economySystem.getDebugStats?.()?.queuePending ?? 0,
       routePending: this.routeSystem.getDebugStats?.()?.queuePending ?? 0,
+      savePending: this.saveSystem.getDebugStats?.()?.queuePending ?? 0,
     };
   }
 

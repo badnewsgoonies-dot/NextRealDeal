@@ -253,6 +253,7 @@ export interface IGameController {
   getUnitManager(): IUnitSystem;
   getEconomyManager(): IEconomySystem;
   getRouteManager(): IRouteSystem;
+  getSaveManager(): ISaveSystem;
   getDebugStats(): {
     queuePending: number;
     mapPending: number;
@@ -260,6 +261,7 @@ export interface IGameController {
     unitPending: number;
     economyPending: number;
     routePending: number;
+    savePending: number;
   } | undefined;
 }
 
@@ -510,5 +512,87 @@ export interface IRouteSystem {
 
   serialize(): string;
   deserialize(json: string): Result<void, RouteError>;
+}
+
+/**
+ * Save System Types
+ */
+
+/**
+ * Save error codes (typed union for safety)
+ */
+export const SAVE_ERR = {
+  Aborted: 'aborted',
+  InvalidSlot: 'invalid-slot',
+  ReservedName: 'reserved-name',
+  SlotNotFound: 'slot-not-found',
+  UnsupportedVersion: 'unsupported-version',
+  InvalidEnvelope: 'invalid-envelope',
+  InvalidData: 'invalid-data',
+  ApplyFailed: 'apply-failed',
+  IoFailed: 'io-failed',
+  Internal: 'internal-error',
+} as const;
+
+export type SaveError = typeof SAVE_ERR[keyof typeof SAVE_ERR];
+
+/**
+ * Subsystem with serialization support
+ */
+export interface SaveSubsystem {
+  readonly name: string;
+  readonly serialize: () => string;
+  readonly deserialize: (json: string) => Result<void, string>;
+}
+
+/**
+ * Save envelope (versioned container)
+ */
+export interface SaveEnvelope {
+  readonly version: 'v1';
+  readonly timestamp: string;
+  readonly subsystems: Record<string, string>;
+}
+
+/**
+ * Manual save data (payload mode)
+ */
+export interface SaveData {
+  readonly version: 'v1';
+  readonly createdAt: string;
+  readonly systems: Record<string, unknown>;
+}
+
+/**
+ * Save store interface (storage abstraction)
+ */
+export interface ISaveStore {
+  write(slot: string, payload: string): Promise<void>;
+  read(slot: string): Promise<string>;
+  delete(slot: string): Promise<void>;
+  list(): Promise<Array<{ slot: string; modified: string; size: number }>>;
+}
+
+/**
+ * Save System interface
+ */
+export interface ISaveSystem {
+  initialize(signal?: AbortSignal, opts?: { store?: ISaveStore }): Promise<Result<void, SaveError>>;
+
+  register(subsystem: SaveSubsystem): void;
+  unregister(name: string): void;
+  listRegistered(): readonly string[];
+
+  save(slot: string, signal?: AbortSignal): Promise<Result<void, SaveError>>;
+  saveWithData(slot: string, data: SaveData, signal?: AbortSignal): Promise<Result<void, SaveError>>;
+  load(slot: string, signal?: AbortSignal, opts?: { apply?: boolean }): Promise<Result<SaveEnvelope, SaveError>>;
+
+  listSlots(signal?: AbortSignal): Promise<Result<readonly { slot: string; modified: string; size: number }[], SaveError>>;
+  deleteSlot(slot: string, signal?: AbortSignal): Promise<Result<void, SaveError>>;
+
+  autoSave(slot?: string, signal?: AbortSignal): Promise<Result<void, SaveError>>;
+
+  serialize(): string;
+  deserialize(json: string): Result<void, SaveError>;
 }
 

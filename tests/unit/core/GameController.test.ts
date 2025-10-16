@@ -7,7 +7,8 @@ import type {
   IBattleSystem,
   IUnitSystem,
   IEconomySystem,
-  IRouteSystem
+  IRouteSystem,
+  ISaveSystem
 } from '../../../src/types/contracts.js';
 import { makeTrace, makeSystemStub } from '../../helpers/systemStubs.js';
 import { MapManager } from '../../../src/map/MapManager.js';
@@ -15,9 +16,10 @@ import { BattleManager } from '../../../src/battle/BattleManager.js';
 import { UnitManager } from '../../../src/unit/UnitManager.js';
 import { EconomyManager } from '../../../src/economy/EconomyManager.js';
 import { RouteManager } from '../../../src/route/RouteManager.js';
+import { SaveManager } from '../../../src/save/SaveManager.js';
 
 describe('GameController — wiring & lifecycle', () => {
-  test('forwards initialize to all 5 systems in order', async () => {
+  test('forwards initialize to all 6 systems in order', async () => {
     const log = new ConsoleLogger('error');
     const rng = makeRng(123);
 
@@ -26,8 +28,9 @@ describe('GameController — wiring & lifecycle', () => {
     const unit = new UnitManager(log, rng.fork('unit'));
     const economy = new EconomyManager(log, rng.fork('economy'));
     const route = new RouteManager(log, rng.fork('route'));
+    const save = new SaveManager(log, rng.fork('save'));
 
-    const gc = new GameController(log, rng, map, battle, unit, economy, route);
+    const gc = new GameController(log, rng, map, battle, unit, economy, route, save);
     const res = await gc.initialize();
     expect(res.ok).toBe(true);
 
@@ -38,14 +41,14 @@ describe('GameController — wiring & lifecycle', () => {
     expect(stats).toBeDefined();
     if (stats) {
       expect(stats.queuePending).toBe(0);
-      expect(stats.routePending).toBe(0);
+      expect(stats.savePending).toBe(0);
     }
     process.env.NODE_ENV = prev;
 
     await gc.destroy();
   });
 
-  test('forwards destroy in reverse order (Route → Economy → Unit → Battle → Map)', async () => {
+  test('forwards destroy in reverse order (Save → Route → Economy → Unit → Battle → Map)', async () => {
     const trace = makeTrace();
     const log = new ConsoleLogger('error');
     const rng = makeRng(456);
@@ -55,20 +58,22 @@ describe('GameController — wiring & lifecycle', () => {
     const unitStub = makeSystemStub<IUnitSystem>('unit', trace).stub;
     const economyStub = makeSystemStub<IEconomySystem>('economy', trace).stub;
     const routeStub = makeSystemStub<IRouteSystem>('route', trace).stub;
+    const saveStub = makeSystemStub<ISaveSystem>('save', trace).stub;
 
-    const gc = new GameController(log, rng, mapStub, battleStub, unitStub, economyStub, routeStub);
+    const gc = new GameController(log, rng, mapStub, battleStub, unitStub, economyStub, routeStub, saveStub);
 
     await gc.initialize();
     await gc.destroy();
 
     // Find destroy calls
     const destroyCalls = trace.entries.filter(e => e.method === 'destroy');
-    expect(destroyCalls.length).toBe(5);
-    expect(destroyCalls[0].sys).toBe('route');   // Route destroys first
-    expect(destroyCalls[1].sys).toBe('economy'); // Economy destroys second
-    expect(destroyCalls[2].sys).toBe('unit');    // Unit destroys third
-    expect(destroyCalls[3].sys).toBe('battle');  // Battle destroys fourth
-    expect(destroyCalls[4].sys).toBe('map');     // Map destroys fifth
+    expect(destroyCalls.length).toBe(6);
+    expect(destroyCalls[0].sys).toBe('save');    // Save destroys first
+    expect(destroyCalls[1].sys).toBe('route');   // Route destroys second
+    expect(destroyCalls[2].sys).toBe('economy'); // Economy destroys third
+    expect(destroyCalls[3].sys).toBe('unit');    // Unit destroys fourth
+    expect(destroyCalls[4].sys).toBe('battle');  // Battle destroys fifth
+    expect(destroyCalls[5].sys).toBe('map');     // Map destroys sixth
   });
 
   test('returns err if first child (map) fails initialize', async () => {
@@ -81,8 +86,9 @@ describe('GameController — wiring & lifecycle', () => {
     const unitOk = makeSystemStub<IUnitSystem>('unit', trace, { initOk: true }).stub;
     const economyOk = makeSystemStub<IEconomySystem>('economy', trace, { initOk: true }).stub;
     const routeOk = makeSystemStub<IRouteSystem>('route', trace, { initOk: true }).stub;
+    const saveOk = makeSystemStub<ISaveSystem>('save', trace, { initOk: true }).stub;
 
-    const gc = new GameController(log, rng, mapFail, battleOk, unitOk, economyOk, routeOk);
+    const gc = new GameController(log, rng, mapFail, battleOk, unitOk, economyOk, routeOk, saveOk);
     const res = await gc.initialize();
 
     expect(res.ok).toBe(false);
@@ -90,15 +96,17 @@ describe('GameController — wiring & lifecycle', () => {
       expect(res.error).toContain('map-init-failed');
     }
 
-    // Battle, Unit, Economy, and Route should NOT have been initialized
+    // All downstream systems should NOT have been initialized
     const battleInits = trace.entries.filter(e => e.sys === 'battle' && e.method === 'initialize');
     const unitInits = trace.entries.filter(e => e.sys === 'unit' && e.method === 'initialize');
     const economyInits = trace.entries.filter(e => e.sys === 'economy' && e.method === 'initialize');
     const routeInits = trace.entries.filter(e => e.sys === 'route' && e.method === 'initialize');
+    const saveInits = trace.entries.filter(e => e.sys === 'save' && e.method === 'initialize');
     expect(battleInits.length).toBe(0);
     expect(unitInits.length).toBe(0);
     expect(economyInits.length).toBe(0);
     expect(routeInits.length).toBe(0);
+    expect(saveInits.length).toBe(0);
   });
 
   test('getters return injected instances', () => {
@@ -109,14 +117,16 @@ describe('GameController — wiring & lifecycle', () => {
     const unit = new UnitManager(log, rng.fork('unit'));
     const economy = new EconomyManager(log, rng.fork('economy'));
     const route = new RouteManager(log, rng.fork('route'));
+    const save = new SaveManager(log, rng.fork('save'));
 
-    const gc = new GameController(log, rng, map, battle, unit, economy, route);
+    const gc = new GameController(log, rng, map, battle, unit, economy, route, save);
 
     expect(gc.getMapManager()).toBe(map);
     expect(gc.getBattleManager()).toBe(battle);
     expect(gc.getUnitManager()).toBe(unit);
     expect(gc.getEconomyManager()).toBe(economy);
     expect(gc.getRouteManager()).toBe(route);
+    expect(gc.getSaveManager()).toBe(save);
   });
 
   test('getDebugStats returns object in test, undefined in prod', () => {
@@ -127,8 +137,9 @@ describe('GameController — wiring & lifecycle', () => {
     const unit = new UnitManager(log, rng.fork('unit'));
     const economy = new EconomyManager(log, rng.fork('economy'));
     const route = new RouteManager(log, rng.fork('route'));
+    const save = new SaveManager(log, rng.fork('save'));
 
-    const gc = new GameController(log, rng, map, battle, unit, economy, route);
+    const gc = new GameController(log, rng, map, battle, unit, economy, route, save);
 
     const prev = process.env.NODE_ENV;
 
@@ -142,6 +153,7 @@ describe('GameController — wiring & lifecycle', () => {
       expect(testStats).toHaveProperty('unitPending');
       expect(testStats).toHaveProperty('economyPending');
       expect(testStats).toHaveProperty('routePending');
+      expect(testStats).toHaveProperty('savePending');
     }
 
     process.env.NODE_ENV = 'production';
@@ -159,8 +171,9 @@ describe('GameController — wiring & lifecycle', () => {
     const unit = new UnitManager(log, rng.fork('unit'));
     const economy = new EconomyManager(log, rng.fork('economy'));
     const route = new RouteManager(log, rng.fork('route'));
+    const save = new SaveManager(log, rng.fork('save'));
 
-    const gc = new GameController(log, rng, map, battle, unit, economy, route);
+    const gc = new GameController(log, rng, map, battle, unit, economy, route, save);
     await gc.initialize();
 
     const result = await gc.update(16.67);
