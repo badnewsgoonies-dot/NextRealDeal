@@ -250,6 +250,92 @@ export interface IBattleSystem {
 export interface IGameController {
   getMapManager(): IMapSystem;
   getBattleManager(): IBattleSystem;
-  getDebugStats(): { queuePending: number; mapPending: number; battlePending: number } | undefined;
+  getUnitManager(): IUnitSystem;
+  getDebugStats(): { 
+    queuePending: number; 
+    mapPending: number; 
+    battlePending: number;
+    unitPending: number;
+  } | undefined;
+}
+
+/**
+ * Unit System Types
+ */
+
+/**
+ * Equipment slot types
+ */
+export type EquipmentSlot = 'weapon' | 'armor' | 'accessory';
+
+/**
+ * Item that can be equipped
+ */
+export interface Equipment {
+  readonly id: string;
+  readonly name: string;
+  readonly slot: EquipmentSlot;
+  readonly atkBonus: number;
+  readonly defBonus: number;
+  readonly speedBonus: number;
+}
+
+/**
+ * Unit with extended stats and equipment
+ */
+export interface GameUnit extends Unit {
+  readonly name: string;
+  readonly level: number;
+  readonly experience: number;
+  readonly position?: Position;
+  readonly equipment?: Partial<Record<EquipmentSlot, Equipment>>;
+  readonly team: 'player' | 'enemy';
+}
+
+/**
+ * Unit creation configuration
+ */
+export interface UnitCreateConfig {
+  readonly id: string;
+  readonly name: string;
+  readonly level?: number;
+  readonly team: 'player' | 'enemy';
+  readonly baseStats?: Partial<Pick<Unit, 'atk' | 'def' | 'speed'>>;
+}
+
+/**
+ * Unit stats after equipment bonuses applied
+ */
+export interface EffectiveStats {
+  readonly hp: number;
+  readonly maxHp: number;
+  readonly atk: number;
+  readonly def: number;
+  readonly speed: number;
+}
+
+/**
+ * Unit System interface
+ */
+export interface IUnitSystem {
+  // Unit management
+  createUnit(config: UnitCreateConfig, signal?: AbortSignal): Promise<Result<GameUnit, string>>;
+  getUnit(id: string): GameUnit | undefined;
+  getAllUnits(): readonly GameUnit[];
+  removeUnit(id: string, signal?: AbortSignal): Promise<Result<void, string>>;
+  
+  // Equipment
+  equipItem(unitId: string, item: Equipment, signal?: AbortSignal): Promise<Result<GameUnit, string>>;
+  unequipItem(unitId: string, slot: EquipmentSlot, signal?: AbortSignal): Promise<Result<GameUnit, string>>;
+  
+  // Stats
+  getEffectiveStats(unitId: string): EffectiveStats | undefined;
+  
+  // Position
+  setPosition(unitId: string, position: Position, signal?: AbortSignal): Promise<Result<GameUnit, string>>;
+  getUnitsAt(position: Position): readonly GameUnit[];
+  
+  // Battle integration
+  getTeamUnits(team: 'player' | 'enemy'): readonly Unit[];
 }
 

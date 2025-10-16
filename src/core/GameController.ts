@@ -11,7 +11,7 @@
 import { SystemTemplate } from './SystemTemplate.js';
 import type { ILogger } from '../util/Logger.js';
 import type { IRng } from '../util/Rng.js';
-import type { IMapSystem, IBattleSystem, IGameController } from '../types/contracts.js';
+import type { IMapSystem, IBattleSystem, IUnitSystem, IGameController } from '../types/contracts.js';
 import { makeAsyncQueue } from '../util/AsyncQueue.js';
 import { ok, err, type Result } from '../util/Result.js';
 
@@ -25,7 +25,8 @@ export class GameController extends SystemTemplate implements IGameController {
     protected readonly log: ILogger,
     private readonly rng: IRng,
     private readonly mapSystem: IMapSystem,
-    private readonly battleSystem: IBattleSystem
+    private readonly battleSystem: IBattleSystem,
+    private readonly unitSystem: IUnitSystem
   ) {
     super({ name: 'GameController' });
   }
@@ -51,7 +52,13 @@ export class GameController extends SystemTemplate implements IGameController {
           return err(`battle-init-failed:${String(battleResult.error)}`);
         }
 
-        this.log.info('gc:init_ok', { map: 'ok', battle: 'ok' });
+        // Initialize Unit third
+        const unitResult = await this.unitSystem.initialize?.(signal);
+        if (unitResult && !unitResult.ok) {
+          return err(`unit-init-failed:${String(unitResult.error)}`);
+        }
+
+        this.log.info('gc:init_ok', { map: 'ok', battle: 'ok', unit: 'ok' });
         return ok(undefined);
       }, { signal });
     } catch (e: unknown) {
@@ -67,9 +74,10 @@ export class GameController extends SystemTemplate implements IGameController {
       return await this.queue.run(async () => {
         if (signal?.aborted) return err('aborted');
 
-        // Update both systems (order doesn't matter for update)
+        // Update all systems (order doesn't matter for update)
         await this.mapSystem.update?.(dt, signal);
         await this.battleSystem.update?.(dt, signal);
+        await this.unitSystem.update?.(dt, signal);
 
         return ok(undefined);
       }, { signal });
@@ -84,11 +92,21 @@ export class GameController extends SystemTemplate implements IGameController {
   async destroy(): Promise<void> {
     try {
       await this.queue.run(async () => {
-        // Destroy in REVERSE order (Battle → Map)
+        // Destroy in REVERSE order (Unit → Battle → Map)
+        try {
+          await this.unitSystem.destroy?.();
+        } catch {
+          // Continue to next system
+        }
         try {
           await this.battleSystem.destroy?.();
-        } finally {
+        } catch {
+          // Continue to next system
+        }
+        try {
           await this.mapSystem.destroy?.();
+        } catch {
+          // Final cleanup
         }
 
         this.log.info('gc:destroy_ok', {});
@@ -112,17 +130,27 @@ export class GameController extends SystemTemplate implements IGameController {
     return this.battleSystem;
   }
 
+  getUnitManager(): IUnitSystem {
+    return this.unitSystem;
+  }
+
   // ========================================
   // Test-Only Debug Hook
   // ========================================
 
-  getDebugStats(): { queuePending: number; mapPending: number; battlePending: number } | undefined {
+  getDebugStats(): { 
+    queuePending: number; 
+    mapPending: number; 
+    battlePending: number;
+    unitPending: number;
+  } | undefined {
     if (process.env.NODE_ENV !== 'test') return undefined;
 
     return {
       queuePending: this.queue.pending,
       mapPending: this.mapSystem.getDebugStats?.()?.queuePending ?? 0,
       battlePending: this.battleSystem.getDebugStats?.()?.queuePending ?? 0,
+      unitPending: this.unitSystem.getDebugStats?.()?.queuePending ?? 0,
     };
   }
 
