@@ -1,31 +1,45 @@
-/*
- * App: Main application with routing
- */
-
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { GameProvider } from './ui/context/GameContext.js';
-import { MenuRoute } from './ui/routes/MenuRoute.js';
-import { RouteRoute } from './ui/routes/RouteRoute.js';
-import type { GameController } from './core/GameController.js';
+import { ThemeProvider } from './ui/context/ThemeContext';
+import { Layout } from './ui/components/layout/Layout';
+import { Overview } from './ui/pages/Overview';
+import { RunsManager } from './ui/pages/RunsManager';
+import { EncounterExplorer } from './ui/pages/EncounterExplorer';
+import { Settings } from './ui/pages/Settings';
+import { Loading } from './ui/components/common/States';
+import { useToast } from './ui/components/common/Toast';
 
-interface AppProps {
-  game: GameController;
+// Lazy load battle route
+const BattleScreen = React.lazy(() => import('./ui/pages/BattleScreen').then(module => ({ default: module.BattleScreen })));
+
+function AppContent() {
+  const { ToastContainer } = useToast();
+
+  return (
+    <>
+      <Layout>
+        <Suspense fallback={<Loading message="Loading battle..." />}>
+          <Routes>
+            <Route path="/" element={<Overview />} />
+            <Route path="/runs" element={<RunsManager />} />
+            <Route path="/encounters" element={<EncounterExplorer />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/battle" element={<BattleScreen />} />
+          </Routes>
+        </Suspense>
+      </Layout>
+      <ToastContainer />
+    </>
+  );
 }
 
-export function App({ game }: AppProps): JSX.Element {
+export function App(): JSX.Element {
   return (
-    <GameProvider game={game}>
+    <ThemeProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<MenuRoute />} />
-          <Route path="/route" element={<RouteRoute />} />
-          <Route path="/battle/:runId" element={<div>Battle Route (TODO)</div>} />
-          <Route path="/shop" element={<div>Shop (TODO)</div>} />
-          <Route path="/inventory" element={<div>Inventory (TODO)</div>} />
-        </Routes>
+        <AppContent />
       </BrowserRouter>
-    </GameProvider>
+    </ThemeProvider>
   );
 }
 
