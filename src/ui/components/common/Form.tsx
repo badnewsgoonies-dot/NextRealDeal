@@ -77,7 +77,7 @@ export function Button({ variant = 'primary', className = '', ...props }: Button
 
   return (
     <button
-      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} focus-ring focus:ring-primary ${className}`}
       {...props}
     />
   );
