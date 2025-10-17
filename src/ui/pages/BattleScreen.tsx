@@ -15,9 +15,6 @@ export function BattleScreen() {
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [targetingMode, setTargetingMode] = useState(false);
 
-  const activeUnit = battleState?.party.find(u => u.id === battleState.activeId) ||
-                     battleState?.enemies.find(u => u.id === battleState.activeId);
-
   const handleUnitClick = React.useCallback((unit: Unit) => {
     if (targetingMode && unit.faction === 'enemy' && unit.alive) {
       // Attack the enemy
@@ -84,15 +81,18 @@ export function BattleScreen() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [targetingMode, selectedId, battleState?.enemies]);
+  }, [targetingMode, selectedId, battleState, handleUnitClick]);
 
   // Early returns AFTER all hooks
   if (loading) return <Loading message="Loading battle..." />;
   if (error) return <Error message={error} onRetry={refetch} />;
   if (!battleState) return <Error message="No battle data" />;
 
+  const activeUnit = battleState.party.find(u => u.id === battleState.activeId) ||
+                     battleState.enemies.find(u => u.id === battleState.activeId);
+
   return (
-    <div className="relative w-full h-screen bg-gray-900">
+    <div className="relative w-full min-h-[calc(100vh-4rem)] bg-gray-900">
       {/* Top-left: Enemy List */}
       <div className="absolute top-4 left-4 z-10">
         <EnemyList enemies={battleState.enemies} />
@@ -128,7 +128,7 @@ export function BattleScreen() {
 
       {/* Targeting instructions */}
       {targetingMode && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-75 text-white px-4 py-2 rounded-md">
+        <div className="pointer-events-none select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/70 text-white px-4 py-2 rounded-md z-20">
           Select target with mouse or use ←/→ to cycle, Enter to confirm, Esc to cancel
         </div>
       )}
