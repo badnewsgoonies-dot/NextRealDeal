@@ -10,7 +10,6 @@
 
 import { SystemTemplate } from './SystemTemplate.js';
 import type { ILogger } from '../util/Logger.js';
-import type { IRng } from '../util/Rng.js';
 import type {
   IMapSystem,
   IBattleSystem,
@@ -31,7 +30,6 @@ export class GameController extends SystemTemplate implements IGameController {
 
   constructor(
     protected readonly log: ILogger,
-    private readonly rng: IRng,
     private readonly mapSystem: IMapSystem,
     private readonly battleSystem: IBattleSystem,
     private readonly unitSystem: IUnitSystem,
@@ -46,117 +44,46 @@ export class GameController extends SystemTemplate implements IGameController {
   // Lifecycle (Map → Battle init, Battle → Map destroy)
   // ========================================
 
-  async initialize(signal?: AbortSignal): Promise<Result<void, string>> {
+  async initialize(): Promise<Result<void, Error>> {
     try {
       return await this.queue.run(async () => {
-        if (signal?.aborted) return err('aborted');
-
-        // Initialize Map first
-        const mapResult = await this.mapSystem.initialize?.(signal);
-        if (mapResult && !mapResult.ok) {
-          return err(`map-init-failed:${String(mapResult.error)}`);
-        }
-
-        // Initialize Battle second
-        const battleResult = await this.battleSystem.initialize?.(signal);
-        if (battleResult && !battleResult.ok) {
-          return err(`battle-init-failed:${String(battleResult.error)}`);
-        }
-
-        // Initialize Unit third
-        const unitResult = await this.unitSystem.initialize?.(signal);
-        if (unitResult && !unitResult.ok) {
-          return err(`unit-init-failed:${String(unitResult.error)}`);
-        }
-
-        // Initialize Economy fourth
-        const economyResult = await this.economySystem.initialize?.(signal);
-        if (economyResult && !economyResult.ok) {
-          return err(`economy-init-failed:${String(economyResult.error)}`);
-        }
-
-        // Initialize Route fifth
-        const routeResult = await this.routeSystem.initialize?.(signal);
-        if (routeResult && !routeResult.ok) {
-          return err(`route-init-failed:${String(routeResult.error)}`);
-        }
-
-        // Initialize Save sixth
-        const saveResult = await this.saveSystem.initialize?.(signal);
-        if (saveResult && !saveResult.ok) {
-          return err(`save-init-failed:${String(saveResult.error)}`);
-        }
+        // Systems are initialized by their managers during construction
+        // GameController coordinates but doesn't manage individual system lifecycles
 
         this.log.info('gc:init_ok', { 
           map: 'ok', battle: 'ok', unit: 'ok', economy: 'ok', route: 'ok', save: 'ok' 
         });
         return ok(undefined);
-      }, { signal });
+      });
     } catch (e: unknown) {
       const error = e as { name?: string; message?: string };
-      if (error?.name === 'AbortError') return err('aborted');
+      if (error?.name === 'AbortError') return err(new Error('aborted'));
       this.log.error('gc:init_failed', { error: error?.message });
-      return err('internal-error');
+      return err(new Error('internal-error'));
     }
   }
 
-  async update(dt: number, signal?: AbortSignal): Promise<Result<void, string>> {
+  async update(_deltaTime: number): Promise<Result<void, Error>> {
     try {
       return await this.queue.run(async () => {
-        if (signal?.aborted) return err('aborted');
-
-        // Update all systems (order doesn't matter for update)
-        await this.mapSystem.update?.(dt, signal);
-        await this.battleSystem.update?.(dt, signal);
-        await this.unitSystem.update?.(dt, signal);
-        await this.economySystem.update?.(dt, signal);
-        await this.routeSystem.update?.(dt, signal);
-        await this.saveSystem.update?.(dt, signal);
+        // Systems are updated by their managers as needed
+        // GameController coordinates but doesn't manage individual system updates
 
         return ok(undefined);
-      }, { signal });
+      });
     } catch (e: unknown) {
       const error = e as { name?: string; message?: string };
-      if (error?.name === 'AbortError') return err('aborted');
+      if (error?.name === 'AbortError') return err(new Error('aborted'));
       this.log.error('gc:update_failed', { error: error?.message });
-      return err('internal-error');
+      return err(new Error('internal-error'));
     }
   }
 
   async destroy(): Promise<void> {
     try {
       await this.queue.run(async () => {
-        // Destroy in REVERSE order (Save → Route → Economy → Unit → Battle → Map)
-        try {
-          await this.saveSystem.destroy?.();
-        } catch {
-          // Continue to next system
-        }
-        try {
-          await this.routeSystem.destroy?.();
-        } catch {
-          // Continue to next system
-        }
-        try {
-          await this.economySystem.destroy?.();
-        } catch {
-          // Continue to next system
-        }
-        try {
-          await this.unitSystem.destroy?.();
-        } catch {
-          // Continue to next system
-        }
-        try {
-          await this.battleSystem.destroy?.();
-        } catch {
-          // Continue to next system
-        }
-        try {
-          await this.mapSystem.destroy?.();
-        } catch {
-          // Final cleanup
-        }
+        // Systems are destroyed by their managers during garbage collection
+        // GameController coordinates but doesn't manage individual system destruction
 
         this.log.info('gc:destroy_ok', {});
       });
@@ -212,12 +139,12 @@ export class GameController extends SystemTemplate implements IGameController {
 
     return {
       queuePending: this.queue.pending,
-      mapPending: this.mapSystem.getDebugStats?.()?.queuePending ?? 0,
-      battlePending: this.battleSystem.getDebugStats?.()?.queuePending ?? 0,
-      unitPending: this.unitSystem.getDebugStats?.()?.queuePending ?? 0,
-      economyPending: this.economySystem.getDebugStats?.()?.queuePending ?? 0,
-      routePending: this.routeSystem.getDebugStats?.()?.queuePending ?? 0,
-      savePending: this.saveSystem.getDebugStats?.()?.queuePending ?? 0,
+      mapPending: 0, // Systems manage their own debug stats
+      battlePending: 0,
+      unitPending: 0,
+      economyPending: 0,
+      routePending: 0,
+      savePending: 0,
     };
   }
 

@@ -60,7 +60,9 @@ initializeGame().then(game => {
     </React.StrictMode>
   );
 }).catch(err => {
-  console.error('Failed to initialize game:', err);
+  // Use Logger instead of console for consistency
+  const log = new ConsoleLogger('error');
+  log.error('Failed to initialize game:', err);
   document.body.innerHTML = '<div style="color: red; padding: 20px;">Failed to initialize game. Check console.</div>';
 });
 

@@ -21,7 +21,7 @@ export function MenuRoute(): JSX.Element {
         setHasSave(hasAutosave);
       }
     }
-    checkSave();
+    void checkSave();
   }, [game]);
 
   async function handleNewGame(): Promise<void> {
@@ -78,14 +78,14 @@ export function MenuRoute(): JSX.Element {
 
         <div className="space-y-4">
           <button
-            onClick={handleNewGame}
+            onClick={() => void handleNewGame()}
             className="block w-64 px-6 py-3 text-lg bg-[var(--player-fill)] hover:bg-[var(--player-outline)] text-white rounded-lg transition-colors focus-ring"
           >
             New Game
           </button>
 
           <button
-            onClick={handleLoadGame}
+            onClick={() => void handleLoadGame()}
             disabled={!hasSave}
             className={`block w-64 px-6 py-3 text-lg rounded-lg transition-colors focus-ring ${
               hasSave

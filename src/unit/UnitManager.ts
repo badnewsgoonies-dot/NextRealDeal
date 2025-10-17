@@ -10,7 +10,6 @@
  */
 
 import { SystemTemplate } from '../core/SystemTemplate.js';
-import type { IRng } from '../util/Rng.js';
 import type { ILogger } from '../util/Logger.js';
 import type { IAsyncQueue } from '../util/AsyncQueue.js';
 import { ok, err, type Result } from '../util/Result.js';
@@ -45,7 +44,6 @@ export class UnitManager extends SystemTemplate implements IUnitManager {
 
   constructor(
     protected readonly log: ILogger,
-    private readonly rng: IRng
   ) {
     super({ name: 'Unit' });
     this.queue = makeAsyncQueue();

@@ -50,14 +50,14 @@ export const MapGenConfigSchema = v.object({
     v.integer(),
     v.minValue(16),
     v.maxValue(128),
-    v.custom((val) => val % 2 === 0, 'Width must be even')
+    v.custom((val) => (val as number) % 2 === 0, 'Width must be even')
   ),
   height: v.pipe(
     v.number(),
     v.integer(),
     v.minValue(16),
     v.maxValue(128),
-    v.custom((val) => val % 2 === 0, 'Height must be even')
+    v.custom((val) => (val as number) % 2 === 0, 'Height must be even')
   ),
   seed: v.number(),
   minRoomSize: v.optional(

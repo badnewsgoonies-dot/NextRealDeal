@@ -113,7 +113,7 @@ export class MapManager extends SystemTemplate implements IMapManager {
     const { rootNode, rooms } = roomsResult.value;
     this.carveAllRooms(rooms, tiles, width);
     const connectors = this.connectRooms(rootNode, tiles, width);
-    this.addExtraLoops(rooms, tiles, width, height, extraLoopsPct);
+    this.addExtraLoops(rooms, tiles, width, extraLoopsPct);
 
     const spawnExit = this.placeSpecialTiles(rooms, tiles, width);
     if (!spawnExit.ok) {
@@ -462,7 +462,6 @@ export class MapManager extends SystemTemplate implements IMapManager {
     rooms: Room[],
     tiles: Tile[],
     width: number,
-    height: number,
     pct: number
   ): void {
     const numExtra = Math.floor((rooms.length - 1) * (pct / 100));
