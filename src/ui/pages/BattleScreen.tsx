@@ -15,14 +15,10 @@ export function BattleScreen() {
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [targetingMode, setTargetingMode] = useState(false);
 
-  if (loading) return <Loading message="Loading battle..." />;
-  if (error) return <Error message={error} onRetry={refetch} />;
-  if (!battleState) return <Error message="No battle data" />;
+  const activeUnit = battleState?.party.find(u => u.id === battleState.activeId) ||
+                     battleState?.enemies.find(u => u.id === battleState.activeId);
 
-  const activeUnit = battleState.party.find(u => u.id === battleState.activeId) ||
-                     battleState.enemies.find(u => u.id === battleState.activeId);
-
-  const handleUnitClick = (unit: Unit) => {
+  const handleUnitClick = React.useCallback((unit: Unit) => {
     if (targetingMode && unit.faction === 'enemy' && unit.alive) {
       // Attack the enemy
       const damage = 30;
@@ -34,9 +30,9 @@ export function BattleScreen() {
     } else {
       setSelectedId(unit.id);
     }
-  };
+  }, [targetingMode, addToast]);
 
-  const handleCommand = (command: 'attack' | 'spells' | 'items' | 'defend') => {
+  const handleCommand = React.useCallback((command: 'attack' | 'spells' | 'items' | 'defend') => {
     switch (command) {
       case 'attack':
         setTargetingMode(true);
@@ -52,10 +48,11 @@ export function BattleScreen() {
         addToast('Defended!', 'success');
         break;
     }
-  };
+  }, [addToast]);
 
   // Keyboard handling for targeting
   React.useEffect(() => {
+    if (!battleState) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!targetingMode) return;
 
@@ -87,7 +84,12 @@ export function BattleScreen() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [targetingMode, selectedId, battleState.enemies]);
+  }, [targetingMode, selectedId, battleState?.enemies]);
+
+  // Early returns AFTER all hooks
+  if (loading) return <Loading message="Loading battle..." />;
+  if (error) return <Error message={error} onRetry={refetch} />;
+  if (!battleState) return <Error message="No battle data" />;
 
   return (
     <div className="relative w-full h-screen bg-gray-900">
