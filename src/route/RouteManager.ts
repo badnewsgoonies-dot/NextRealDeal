@@ -26,22 +26,34 @@ import {
   type Chosen,
   type RunPointer,
   type RouteError,
+  type RouteGraph,
+  type RouteVisualization,
+  type EnhancedChoice,
   ROUTE_ERR,
 } from '../types/contracts.js';
+import * as GraphGen from './RouteGraphGenerator.js';
 
 const ROUTE_VERSION = 'v1' as const;  // ✅ Single source of truth
+const ENHANCED_VERSION = 'v2' as const;  // Enhanced features version
 
 export interface IRouteManager extends IRouteSystem {
   readonly name: string;
   initialize(): Promise<Result<void, Error>>;
   update(deltaTime: number): Promise<Result<void, Error>>;
   destroy(): Promise<void>;
+  
+  // Enhanced methods (v2)
+  generateRouteGraph(seed: number): Result<RouteGraph, string>;
+  getRouteVisualization(graph: RouteGraph): Result<RouteVisualization, string>;
+  getEnhancedChoices(signal?: AbortSignal): Promise<Result<readonly EnhancedChoice[], RouteError>>;
+  
   getDebugStats(): {
     queuePending: number;
     runId: string | null;
     step: number;
     historyLen: number;
     cacheValid: boolean;
+    routeGraph: RouteGraph | null;
   } | undefined;
 }
 
@@ -55,6 +67,8 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
   private state: RunState | null = null;
   private runRng: IRng | null = null;
   private choicesCache: readonly Choice[] | null = null;
+  private enhancedChoicesCache: readonly EnhancedChoice[] | null = null;
+  private routeGraph: RouteGraph | null = null;
 
   constructor(
     protected readonly log: ILogger,
@@ -75,6 +89,7 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
     step: number;
     historyLen: number;
     cacheValid: boolean;
+    routeGraph: RouteGraph | null;
   } | undefined {
     if (process.env.NODE_ENV !== 'test') return undefined;
 
@@ -84,6 +99,7 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
       step: this.state?.step ?? 0,
       historyLen: this.state?.history.length ?? 0,
       cacheValid: this.choicesCache !== null,
+      routeGraph: this.routeGraph,
     };
   }
 
@@ -123,6 +139,7 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
         this.state = initialState;
         this.runRng = this.routeRngRoot.fork(`run#${runId}:${normalizedSeed}:v1`);
         this.choicesCache = null;
+        this.enhancedChoicesCache = null;
 
         this.log.info('route:run_started', { runId, seed: normalizedSeed, version: 'v1' });
         return ok(initialState);
@@ -150,6 +167,7 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
         this.state = null;
         this.runRng = null;
         this.choicesCache = null;
+        this.enhancedChoicesCache = null;
 
         this.log.info('route:run_ended', summary);
         return ok(undefined);
@@ -272,6 +290,7 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
       this.state = validation.value;
       this.runRng = this.routeRngRoot.fork(`run#${this.state.runId}:${this.state.seed}:${ROUTE_VERSION}`);
       this.choicesCache = null;
+      this.enhancedChoicesCache = null;
 
       this.log.info('route:deserialized', {
         runId: this.state.runId,
@@ -307,8 +326,66 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
     this.state = null;
     this.runRng = null;
     this.choicesCache = null;
+    this.enhancedChoicesCache = null;
 
     this.log.info('route:destroy', summary);
+  }
+
+  // ========================================
+  // Enhanced Route Generation (v2)
+  // ========================================
+
+  public generateRouteGraph(seed: number): Result<RouteGraph, string> {
+    const result = GraphGen.generateRouteGraph(this.routeRngRoot, seed);
+    
+    if (result.ok) {
+      this.routeGraph = result.value;
+      this.log.info('route:graph_generated', { 
+        seed, 
+        nodeCount: result.value.nodes.length, 
+        layerCount: result.value.layers.length 
+      });
+    } else {
+      this.log.error('route:graph_generation_failed', { error: result.error });
+    }
+    
+    return result;
+  }
+
+  public getRouteVisualization(graph: RouteGraph): Result<RouteVisualization, string> {
+    const result = GraphGen.getRouteVisualization(graph);
+    
+    if (!result.ok) {
+      this.log.error('route:visualization_failed', { error: result.error });
+    }
+    
+    return result;
+  }
+
+  public async getEnhancedChoices(signal?: AbortSignal): Promise<Result<readonly EnhancedChoice[], RouteError>> {
+    try {
+      return await this.queue.run(async () => {
+        if (signal?.aborted) return err(ROUTE_ERR.Aborted);
+        if (!this.state || !this.runRng) return err(ROUTE_ERR.NoRun);
+        if (this.state.step >= 10000) return err(ROUTE_ERR.Finished);
+
+        const wasCached = !!this.enhancedChoicesCache;
+        const cache = this.enhancedChoicesCache ?? 
+          (this.enhancedChoicesCache = this._buildEnhancedChoicesInternal(this.state));
+
+        this.log.info('route:enhanced_choices_retrieved', {
+          step: this.state.step,
+          fromCache: wasCached,
+        });
+
+        return ok(cache);
+      }, { signal });
+    } catch (e: unknown) {
+      const error = e as { name?: string; message?: string };
+      if (error?.name === 'AbortError') return err(ROUTE_ERR.Aborted);
+      this.log.error('route:get_enhanced_choices_failed', { error: error?.message });
+      return err(ROUTE_ERR.Internal);
+    }
   }
 
   // ========================================
@@ -367,6 +444,50 @@ export class RouteManager extends SystemTemplate implements IRouteManager {
       step: this.state!.step + 1,
     };
     this.choicesCache = null;
+    this.enhancedChoicesCache = null;
+  }
+
+  // ========================================
+  // Enhanced Internal Methods (v2)
+  // ========================================
+
+  /**
+   * Build enhanced choices with node types, difficulty, and rewards
+   */
+  private _buildEnhancedChoicesInternal(state: RunState): EnhancedChoice[] {
+    const stepRng = this.runRng!.fork(`step#${state.step}:${ENHANCED_VERSION}`);
+    const labels: Array<'A' | 'B' | 'C'> = ['A', 'B', 'C'];
+    const seen = new Set<number>();
+    const hint = this._arenaHint();
+    const choices: EnhancedChoice[] = [];
+
+    for (let i = 0; i < 3; i++) {
+      let arenaSeed: number;
+      do {
+        arenaSeed = stepRng.int(1, 2147483647);
+      } while (seen.has(arenaSeed));
+      seen.add(arenaSeed);
+
+      const nodeType = GraphGen.determineNodeType(state.step, 10, stepRng);
+      const difficulty = GraphGen.calculateDifficulty(state.step, 10);
+      const rewards = GraphGen.generateRewardPreview(nodeType, state.step, stepRng);
+
+      choices.push({
+        id: `${state.runId}:s${state.step}:i${i}:lbl${labels[i]}`,
+        step: state.step,
+        type: 'battle',
+        label: labels[i],
+        arenaSeed,
+        arenaHint: hint,
+        nodeType,
+        difficulty,
+        rewards,
+        description: GraphGen.generateNodeDescription(nodeType),
+        visualPosition: { x: i * 200, y: state.step * 150 },
+      });
+    }
+
+    return choices;
   }
 }
 

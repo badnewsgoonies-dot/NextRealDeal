@@ -515,6 +515,69 @@ export interface IRouteSystem {
 }
 
 /**
+ * Enhanced Route System Types (v2 - Slay the Spire-style meta-map)
+ */
+
+/**
+ * Node types for Slay the Spire-style meta-map
+ */
+export type NodeType = 'battle' | 'elite_battle' | 'rest_site' | 'shop' | 'event' | 'boss';
+
+/**
+ * Reward preview for route nodes
+ */
+export interface RewardPreview {
+  readonly gold: number;
+  readonly items: readonly string[];
+  readonly experience: number;
+}
+
+/**
+ * Route node with position and connections
+ */
+export interface RouteNode {
+  readonly id: string;
+  readonly type: NodeType;
+  readonly position: { x: number; y: number };
+  readonly connections: readonly string[];
+  readonly difficulty: number;
+  readonly rewards: RewardPreview;
+  readonly description: string;
+}
+
+/**
+ * Route graph structure
+ */
+export interface RouteGraph {
+  readonly nodes: readonly RouteNode[];
+  readonly connections: readonly { from: string; to: string }[];
+  readonly startNode: string;
+  readonly endNode: string;
+  readonly layers: readonly (readonly string[])[];
+}
+
+/**
+ * Visual route data for UI rendering
+ */
+export interface RouteVisualization {
+  readonly svgPath: string;
+  readonly nodePositions: Record<string, { x: number; y: number }>;
+  readonly connections: readonly { from: string; to: string; path: string }[];
+  readonly bounds: { width: number; height: number };
+}
+
+/**
+ * Enhanced choice with node type and visual data
+ */
+export interface EnhancedChoice extends Choice {
+  readonly nodeType: NodeType;
+  readonly difficulty: number;
+  readonly rewards: RewardPreview;
+  readonly description: string;
+  readonly visualPosition: { x: number; y: number };
+}
+
+/**
  * Save System Types
  */
 
