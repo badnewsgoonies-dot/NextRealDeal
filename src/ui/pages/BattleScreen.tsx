@@ -9,13 +9,13 @@ import { useToast } from '../components/common/Toast';
 import { Loading, Error } from '../components/common/States';
 import type { Unit } from '../types';
 
-export function BattleScreen() {
+export function BattleScreen(): React.ReactElement {
   const { data: battleState, loading, error, refetch } = useBattle();
   const { addToast } = useToast();
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [targetingMode, setTargetingMode] = useState(false);
 
-  const handleUnitClick = React.useCallback((unit: Unit) => {
+  const handleUnitClick = React.useCallback((unit: Unit): void => {
     if (targetingMode && unit.faction === 'enemy' && unit.alive) {
       // Attack the enemy
       const damage = 30;
@@ -29,7 +29,7 @@ export function BattleScreen() {
     }
   }, [targetingMode, addToast]);
 
-  const handleCommand = React.useCallback((command: 'attack' | 'spells' | 'items' | 'defend') => {
+  const handleCommand = React.useCallback((command: 'attack' | 'spells' | 'items' | 'defend'): void => {
     switch (command) {
       case 'attack':
         setTargetingMode(true);
@@ -50,33 +50,17 @@ export function BattleScreen() {
   // Keyboard handling for targeting
   React.useEffect(() => {
     if (!battleState) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!targetingMode) return;
+    
+    const livingEnemies = battleState.enemies.filter(e => e.alive);
+    
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (!targetingMode || livingEnemies.length === 0) return;
 
-      const livingEnemies = battleState.enemies.filter(e => e.alive);
-      if (livingEnemies.length === 0) return;
+      const currentIndex = selectedId ? livingEnemies.findIndex(enemy => enemy.id === selectedId) : -1;
 
-      const currentIndex = selectedId ? livingEnemies.findIndex(e => e.id === selectedId) : -1;
-
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        const newIndex = currentIndex > 0 ? currentIndex - 1 : livingEnemies.length - 1;
-        setSelectedId(livingEnemies[newIndex].id);
-      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        const newIndex = currentIndex < livingEnemies.length - 1 ? currentIndex + 1 : 0;
-        setSelectedId(livingEnemies[newIndex].id);
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (selectedId) {
-          const target = livingEnemies.find(e => e.id === selectedId);
-          if (target) handleUnitClick(target);
-        }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        setTargetingMode(false);
-        setSelectedId(undefined);
-      }
+      handleNavigationKey(e, currentIndex, livingEnemies, setSelectedId);
+      handleConfirmKey(e, selectedId, livingEnemies, handleUnitClick);
+      handleCancelKey(e, setTargetingMode, setSelectedId);
     };
 
     document.addEventListener('keydown', handleKeyDown);
@@ -136,4 +120,49 @@ export function BattleScreen() {
       )}
     </div>
   );
+}
+
+// Helper functions to reduce complexity
+function handleNavigationKey(
+  e: KeyboardEvent,
+  currentIndex: number,
+  livingEnemies: Unit[],
+  setSelectedId: (id: string) => void
+): void {
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const newIndex = currentIndex > 0 ? currentIndex - 1 : livingEnemies.length - 1;
+    setSelectedId(livingEnemies[newIndex].id);
+  } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    const newIndex = currentIndex < livingEnemies.length - 1 ? currentIndex + 1 : 0;
+    setSelectedId(livingEnemies[newIndex].id);
+  }
+}
+
+function handleConfirmKey(
+  e: KeyboardEvent,
+  selectedId: string | undefined,
+  livingEnemies: Unit[],
+  handleUnitClick: (unit: Unit) => void
+): void {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (selectedId) {
+      const target = livingEnemies.find(enemy => enemy.id === selectedId);
+      if (target) handleUnitClick(target);
+    }
+  }
+}
+
+function handleCancelKey(
+  e: KeyboardEvent,
+  setTargetingMode: (mode: boolean) => void,
+  setSelectedId: (id: string | undefined) => void
+): void {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    setTargetingMode(false);
+    setSelectedId(undefined);
+  }
 }

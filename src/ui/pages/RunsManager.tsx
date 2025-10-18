@@ -5,7 +5,7 @@ import { Pagination } from '../components/common/Pagination';
 import { Modal } from '../components/common/Modal';
 import { Input, Select, Button } from '../components/common/Form';
 import { Loading, Empty, Error } from '../components/common/States';
-import { useRuns, useCreateRun, useUpdateRun, useDeleteRun } from '../hooks/useRuns';
+import { useRuns, useCreateRun, useUpdateRun } from '../hooks/useRuns';
 import { useToast } from '../components/common/Toast';
 import { runCreateSchema, runUpdateSchema } from '../validation/schemas';
 import type { Run, RunsQuery } from '../types';
@@ -17,7 +17,7 @@ const columns = [
   { key: 'createdAt' as keyof Run, label: 'Created', sortable: true },
 ];
 
-export function RunsManager() {
+export function RunsManager(): React.ReactElement {
   const [query, setQuery] = useState<RunsQuery>({ page: 1, pageSize: 8 });
   const [sortBy, setSortBy] = useState<'createdAt' | 'name'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -29,10 +29,9 @@ export function RunsManager() {
   const { data, loading, error, refetch } = useRuns({ ...query, sortBy, sortOrder });
   const createRun = useCreateRun();
   const updateRun = useUpdateRun();
-  const deleteRun = useDeleteRun();
   const { addToast } = useToast();
 
-  const handleSort = (key: keyof Run) => {
+  const handleSort = (key: keyof Run): void => {
     if (key === 'createdAt' || key === 'name') {
       if (sortBy === key) {
         setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -43,7 +42,7 @@ export function RunsManager() {
     }
   };
 
-  const handleCreate = async () => {
+  const handleCreate = async (): Promise<void> => {
     try {
       const validated = runCreateSchema.parse(formData);
       await createRun.mutate(validated);
@@ -51,10 +50,11 @@ export function RunsManager() {
       setShowCreateModal(false);
       setFormData({ name: '', seed: '', status: 'active' });
       refetch();
-    } catch (err: any) {
-      if (err.errors) {
+    } catch (err: unknown) {
+      const zodError = err as { errors?: Array<{ path: string[]; message: string }> };
+      if (zodError.errors) {
         const errors: Record<string, string> = {};
-        err.errors.forEach((e: any) => {
+        zodError.errors.forEach((e) => {
           errors[e.path[0]] = e.message;
         });
         setFormErrors(errors);
@@ -62,7 +62,7 @@ export function RunsManager() {
     }
   };
 
-  const handleEdit = async () => {
+  const handleEdit = async (): Promise<void> => {
     if (!editingRun) return;
     try {
       const validated = runUpdateSchema.parse({ ...formData, id: editingRun.id });
@@ -71,10 +71,11 @@ export function RunsManager() {
       setEditingRun(null);
       setFormData({ name: '', seed: '', status: 'active' });
       refetch();
-    } catch (err: any) {
-      if (err.errors) {
+    } catch (err: unknown) {
+      const zodError = err as { errors?: Array<{ path: string[]; message: string }> };
+      if (zodError.errors) {
         const errors: Record<string, string> = {};
-        err.errors.forEach((e: any) => {
+        zodError.errors.forEach((e) => {
           errors[e.path[0]] = e.message;
         });
         setFormErrors(errors);
@@ -82,23 +83,8 @@ export function RunsManager() {
     }
   };
 
-  const handleDelete = async (run: Run) => {
-    if (confirm(`Delete run "${run.name}"?`)) {
-      try {
-        await deleteRun.mutate(run.id);
-        addToast('Run deleted successfully', 'success');
-        refetch();
-      } catch (err) {
-        addToast('Failed to delete run', 'error');
-      }
-    }
-  };
-
-  const openEditModal = (run: Run) => {
-    setEditingRun(run);
-    setFormData({ name: run.name, seed: run.seed, status: run.status });
-    setFormErrors({});
-  };
+  // Note: handleDelete and openEditModal can be implemented when needed
+  // For now, delete and edit functionality is handled via Table actions
 
   if (loading) return <Loading />;
   if (error) return <Error message={error} onRetry={refetch} />;
@@ -124,7 +110,7 @@ export function RunsManager() {
           />
           <Select
             value={query.status || 'all'}
-            onChange={(e) => setQuery({ ...query, status: e.target.value as any, page: 1 })}
+            onChange={(e) => setQuery({ ...query, status: e.target.value as 'active' | 'archived', page: 1 })}
             options={[
               { value: 'all', label: 'All Status' },
               { value: 'active', label: 'Active' },
@@ -210,7 +196,7 @@ export function RunsManager() {
           <Select
             label="Status"
             value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'archived' })}
             options={[
               { value: 'active', label: 'Active' },
               { value: 'archived', label: 'Archived' },

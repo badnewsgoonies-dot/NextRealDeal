@@ -15,14 +15,14 @@ interface TableProps<T> {
   className?: string;
 }
 
-export function Table<T extends Record<string, any>>({
+export function Table<T extends Record<string, unknown>>({
   data,
   columns,
   sortBy,
   sortOrder,
   onSort,
   className = '',
-}: TableProps<T>) {
+}: TableProps<T>): React.ReactElement {
   return (
     <div className={`overflow-x-auto ${className}`}>
       <table className="w-full border-collapse">

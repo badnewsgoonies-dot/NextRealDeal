@@ -5,7 +5,7 @@ interface CommandMenuProps {
   disabled?: boolean;
 }
 
-export function CommandMenu({ onCommand, disabled = false }: CommandMenuProps) {
+export function CommandMenu({ onCommand, disabled = false }: CommandMenuProps): React.ReactElement {
   const commands = [
     { key: 'attack' as const, label: 'Attack', icon: '⚔️' },
     { key: 'spells' as const, label: 'Spells', icon: '🔮' },

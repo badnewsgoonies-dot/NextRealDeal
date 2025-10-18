@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { makeMockBattle } from '../services/battle';
 import type { BattleState } from '../types';
 
-export function useBattle(seed?: string) {
+export function useBattle(seed?: string): React.ReactElement {
   const [data, setData] = useState<BattleState | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

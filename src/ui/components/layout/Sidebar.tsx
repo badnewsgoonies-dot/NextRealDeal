@@ -9,7 +9,7 @@ const navItems = [
   { path: '/battle', label: 'Battle', icon: '🗡️' },
 ];
 
-export function Sidebar() {
+export function Sidebar(): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 

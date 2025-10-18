@@ -9,7 +9,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme');
     return (saved as Theme) || 'dark'; // Default to dark
@@ -20,7 +20,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
-  const toggleTheme = () => {
+  const toggleTheme = (): void => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
@@ -31,7 +31,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useTheme() {
+export function useTheme(): ThemeContextType {
   const context = useContext(ThemeContext);
   if (!context) {
     throw new Error('useTheme must be used within ThemeProvider');

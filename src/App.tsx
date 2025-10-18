@@ -12,7 +12,7 @@ import { useToast } from './ui/components/common/Toast';
 // Lazy load battle route
 const BattleScreen = React.lazy(() => import('./ui/pages/BattleScreen').then(module => ({ default: module.BattleScreen })));
 
-function AppContent() {
+function AppContent(): React.ReactElement {
   const { ToastContainer } = useToast();
 
   return (

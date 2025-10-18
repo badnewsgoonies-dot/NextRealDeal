@@ -3,7 +3,7 @@ import { listRuns, createRun, updateRun, deleteRun, runsSummary } from '../servi
 import type { Run, RunsSummary, RunsQuery } from '../types';
 import type { RunCreateInput, RunUpdateInput } from '../validation/schemas';
 
-export function useRuns(params: RunsQuery = {}) {
+export function useRuns(params: RunsQuery = {}): React.ReactElement {
   const [data, setData] = useState<{ runs: Run[]; total: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export function useRuns(params: RunsQuery = {}) {
   return { data, loading, error, refetch: fetch };
 }
 
-export function useCreateRun() {
+export function useCreateRun(): React.ReactElement {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +49,7 @@ export function useCreateRun() {
   return { mutate, loading, error };
 }
 
-export function useUpdateRun() {
+export function useUpdateRun(): React.ReactElement {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,7 +70,7 @@ export function useUpdateRun() {
   return { mutate, loading, error };
 }
 
-export function useDeleteRun() {
+export function useDeleteRun(): React.ReactElement {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,7 +90,7 @@ export function useDeleteRun() {
   return { mutate, loading, error };
 }
 
-export function useRunsSummary() {
+export function useRunsSummary(): React.ReactElement {
   const [data, setData] = useState<RunsSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

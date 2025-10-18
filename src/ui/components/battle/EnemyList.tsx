@@ -5,7 +5,7 @@ interface EnemyListProps {
   enemies: Unit[];
 }
 
-export function EnemyList({ enemies }: EnemyListProps) {
+export function EnemyList({ enemies }: EnemyListProps): React.ReactElement {
   return (
     <div className="bg-black bg-opacity-60 border border-white border-opacity-15 rounded-lg p-4 w-64">
       <h3 className="text-white font-semibold mb-3">Enemies</h3>

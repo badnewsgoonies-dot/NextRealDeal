@@ -7,7 +7,7 @@ interface ToastProps {
   onClose: () => void;
 }
 
-function ToastItem({ message, type, onClose }: ToastProps) {
+function ToastItem({ message, type, onClose }: ToastProps): React.ReactElement {
   useEffect(() => {
     const timer = setTimeout(onClose, 5000);
     return () => clearTimeout(timer);
@@ -38,7 +38,7 @@ interface ToastContainerProps {
   removeToast: (id: string) => void;
 }
 
-function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
+function ToastContainer({ toasts, removeToast }: ToastContainerProps): React.ReactElement {
   return createPortal(
     <div className="fixed top-4 right-4 z-50 space-y-2">
       {toasts.map(toast => (
@@ -55,15 +55,22 @@ function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
 
 let toastId = 0;
 
-export function useToast() {
+interface UseToastReturn {
+  toasts: Array<ToastProps & { id: string }>;
+  addToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  removeToast: (id: string) => void;
+  ToastContainer: () => React.ReactElement;
+}
+
+export function useToast(): UseToastReturn {
   const [toasts, setToasts] = useState<Array<ToastProps & { id: string }>>([]);
 
-  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info'): void => {
     const id = (++toastId).toString();
-    setToasts(prev => [...prev, { id, message, type, onClose: () => {} }]);
+    setToasts(prev => [...prev, { id, message, type, onClose: (): void => {} }]);
   };
 
-  const removeToast = (id: string) => {
+  const removeToast = (id: string): void => {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
@@ -71,6 +78,6 @@ export function useToast() {
     toasts,
     addToast,
     removeToast,
-    ToastContainer: () => <ToastContainer toasts={toasts} removeToast={removeToast} />,
+    ToastContainer: (): React.ReactElement => <ToastContainer toasts={toasts} removeToast={removeToast} />,
   };
 }

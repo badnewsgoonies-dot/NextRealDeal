@@ -3,10 +3,11 @@ import type { Run, RunsSummary, RunsQuery } from '../types';
 import type { RunCreateInput, RunUpdateInput } from '../validation/schemas';
 
 // Simulate latency
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
-// Simulate occasional failures
-const maybeFail = () => Math.random() < 0.1; // 10% failure rate
+// Simulate occasional failures (Math.random allowed in mock services)
+// eslint-disable-next-line no-restricted-properties
+const maybeFail = (): boolean => Math.random() < 0.1; // 10% failure rate
 
 export async function listRuns(params: RunsQuery = {}): Promise<{ runs: Run[]; total: number }> {
   await delay(200);
