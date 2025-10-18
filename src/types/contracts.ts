@@ -512,10 +512,55 @@ export interface EnhancedEquipment extends Equipment {
  */
 
 /**
- * Currency (single type: gold)
+ * Currency (legacy - gold only)
  */
 export interface Currency {
-  readonly gold: number;  // 0 to 999,999,999
+  readonly gold: number;
+}
+
+/**
+ * Progression currency (experience, upgrade points, skill points)
+ */
+export interface ProgressionCurrency {
+  readonly experience: number;
+  readonly upgradePoints: number;
+  readonly skillPoints: number;
+}
+
+/**
+ * Experience gain sources and multipliers
+ */
+export interface ExperienceGain {
+  readonly source: 'battle' | 'exploration' | 'quest' | 'discovery';
+  readonly amount: number;
+  readonly multiplier: number;
+}
+
+/**
+ * Upgrade currency gain
+ */
+export interface UpgradeGain {
+  readonly source: 'battle' | 'exploration' | 'quest' | 'discovery';
+  readonly amount: number;
+  readonly type: 'upgrade_points' | 'skill_points';
+}
+
+/**
+ * Enhancement cost
+ */
+export interface EnhancementCost {
+  readonly upgradePoints: number;
+  readonly experience: number;
+  readonly materials?: readonly string[];
+}
+
+/**
+ * Combined progression reward
+ */
+export interface ProgressionReward {
+  readonly experience: ExperienceGain;
+  readonly upgrades: readonly UpgradeGain[];
+  readonly items: readonly ItemDrop[];
 }
 
 /**
@@ -525,7 +570,7 @@ export interface Item {
   readonly id: string;
   readonly name: string;
   readonly type: 'weapon' | 'armor' | 'accessory' | 'consumable';
-  readonly value: number;  // Gold value
+  readonly value: number;
   readonly stats?: {
     readonly atkBonus?: number;
     readonly defBonus?: number;
@@ -539,20 +584,20 @@ export interface Item {
  */
 export interface ItemDrop {
   readonly itemId: string;
-  readonly probability: number;  // 0-100
+  readonly probability: number;
 }
 
 /**
- * Shop item configuration
+ * Shop item configuration (legacy)
  */
 export interface ShopInventory {
   readonly itemId: string;
-  readonly stock: number;  // -1 = infinite
+  readonly stock: number;
   readonly price: number;
 }
 
 /**
- * Player's complete inventory
+ * Player's inventory (legacy)
  */
 export interface PlayerInventory {
   readonly currency: Currency;
@@ -560,10 +605,18 @@ export interface PlayerInventory {
 }
 
 /**
+ * Player's progression inventory
+ */
+export interface ProgressionInventory {
+  readonly currency: ProgressionCurrency;
+  readonly items: readonly Item[];
+}
+
+/**
  * Economy System interface
  */
 export interface IEconomySystem {
-  // Currency management
+  // Currency management (legacy)
   modifyCurrency(playerId: string, delta: number, signal?: AbortSignal): Promise<Result<Currency, string>>;
   getCurrency(playerId: string): Currency;
   
@@ -572,7 +625,7 @@ export interface IEconomySystem {
   removeItem(playerId: string, itemId: string, signal?: AbortSignal): Promise<Result<void, string>>;
   getInventory(playerId: string): PlayerInventory;
   
-  // Shop system
+  // Shop system (legacy)
   purchaseItem(playerId: string, itemId: string, signal?: AbortSignal): Promise<Result<Item, string>>;
   sellItem(playerId: string, itemId: string, signal?: AbortSignal): Promise<Result<number, string>>;
   getShopInventory(): readonly ShopInventory[];
@@ -580,13 +633,21 @@ export interface IEconomySystem {
   // Loot system
   rollLoot(dropTable: ItemDrop[], signal?: AbortSignal): Promise<Result<Item | null, string>>;
   
-  // Battle rewards
+  // Battle rewards (legacy)
   awardBattleReward(
     playerId: string,
     goldReward: number,
     itemDrops: ItemDrop[],
     signal?: AbortSignal
   ): Promise<Result<{ gold: number; items: Item[] }, string>>;
+  
+  // Progression currency (new)
+  getProgressionCurrency?(playerId: string): ProgressionCurrency;
+  grantExperience?(playerId: string, experience: ExperienceGain, signal?: AbortSignal): Promise<Result<number, string>>;
+  grantUpgradeCurrency?(playerId: string, upgrade: UpgradeGain, signal?: AbortSignal): Promise<Result<number, string>>;
+  spendUpgradePoints?(playerId: string, cost: EnhancementCost, signal?: AbortSignal): Promise<Result<void, string>>;
+  awardProgressionReward?(playerId: string, reward: ProgressionReward, signal?: AbortSignal): Promise<Result<void, string>>;
+  getProgressionInventory?(playerId: string): ProgressionInventory;
 }
 
 /**
