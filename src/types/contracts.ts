@@ -408,6 +408,105 @@ export interface IUnitSystem {
 }
 
 /**
+ * Enhanced Unit System Types (Character Progression)
+ */
+
+export type CharacterClass = 'warrior' | 'mage' | 'rogue' | 'paladin' | 'ranger';
+export type SkillEffectType = 'stat_bonus' | 'ability_unlock' | 'passive_effect';
+export type AbilityTarget = 'self' | 'enemy' | 'ally' | 'all_enemies' | 'all_allies';
+export type AbilityEffectType = 'damage' | 'heal' | 'buff' | 'debuff' | 'status_effect';
+export type EquipmentRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+export type EnhancementType = 'atk' | 'def' | 'speed' | 'hp' | 'mana';
+
+export interface SkillEffect {
+  readonly type: SkillEffectType;
+  readonly stat?: 'atk' | 'def' | 'speed' | 'hp' | 'crit_chance' | 'dodge_chance' | 'mana';
+  readonly value: number;
+  readonly abilityId?: string;
+  readonly description: string;
+}
+
+export interface SkillNode {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly cost: number;
+  readonly prerequisites: readonly string[];
+  readonly effects: readonly SkillEffect[];
+  readonly maxLevel: number;
+  readonly currentLevel: number;
+}
+
+export interface AbilityEffect {
+  readonly type: AbilityEffectType;
+  readonly value: number;
+  readonly target: AbilityTarget;
+  readonly duration?: number;
+  readonly statusEffect?: StatusEffectType;
+}
+
+export interface CharacterAbility {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly type: 'active' | 'passive';
+  readonly cooldown: number;
+  readonly cost: number;
+  readonly effects: readonly AbilityEffect[];
+  readonly unlockLevel: number;
+}
+
+export interface CharacterProgression {
+  readonly level: number;
+  readonly experience: number;
+  readonly experienceToNext: number;
+  readonly skillPoints: number;
+  readonly availableSkillPoints: number;
+  readonly unlockedAbilities: readonly string[];
+  readonly skillTree: readonly SkillNode[];
+}
+
+export interface EnhancedGameUnit extends GameUnit {
+  readonly characterClass: CharacterClass;
+  readonly progression: CharacterProgression;
+  readonly abilities: readonly CharacterAbility[];
+  readonly mana: number;
+  readonly maxMana: number;
+}
+
+export interface ExperienceGain {
+  readonly amount: number;
+  readonly leveledUp: boolean;
+  readonly newLevel: number;
+  readonly skillPointsGained: number;
+  readonly abilitiesUnlocked: readonly string[];
+}
+
+export interface SkillAllocation {
+  readonly skillId: string;
+  readonly newLevel: number;
+  readonly effectsApplied: readonly SkillEffect[];
+  readonly skillPointsRemaining: number;
+}
+
+export interface CharacterCreateConfig extends UnitCreateConfig {
+  readonly characterClass: CharacterClass;
+}
+
+export interface EquipmentEnhancement {
+  readonly level: number;
+  readonly enhancementBonus: number;
+  readonly enhancementType: EnhancementType;
+}
+
+export interface EnhancedEquipment extends Equipment {
+  readonly enhancement?: EquipmentEnhancement;
+  readonly durability: number;
+  readonly maxDurability: number;
+  readonly rarity: EquipmentRarity;
+}
+
+/**
  * Economy System Types
  */
 
