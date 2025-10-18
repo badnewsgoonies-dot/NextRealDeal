@@ -5,7 +5,7 @@ interface StatusHudProps {
   unit: Unit;
 }
 
-export function StatusHud({ unit }: StatusHudProps) {
+export function StatusHud({ unit }: StatusHudProps): React.ReactElement {
   const hpPercent = (unit.hp / unit.hpMax) * 100;
   const mpPercent = (unit.mp / unit.mpMax) * 100;
 

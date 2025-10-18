@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function Loading({ message = 'Loading...' }: { message?: string }) {
+export function Loading({ message = 'Loading...' }: { message?: string }): React.ReactElement {
   return (
     <div className="flex items-center justify-center py-8">
       <div className="text-text-secondary">{message}</div>
@@ -8,7 +8,7 @@ export function Loading({ message = 'Loading...' }: { message?: string }) {
   );
 }
 
-export function Empty({ message = 'No data available' }: { message?: string }) {
+export function Empty({ message = 'No data available' }: { message?: string }): React.ReactElement {
   return (
     <div className="flex items-center justify-center py-8">
       <div className="text-center">
@@ -19,7 +19,7 @@ export function Empty({ message = 'No data available' }: { message?: string }) {
   );
 }
 
-export function Error({ message = 'Something went wrong', onRetry }: { message?: string; onRetry?: () => void }) {
+export function Error({ message = 'Something went wrong', onRetry }: { message?: string; onRetry?: () => void }): React.ReactElement {
   return (
     <div className="flex items-center justify-center py-8">
       <div className="text-center">

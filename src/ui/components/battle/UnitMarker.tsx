@@ -9,7 +9,7 @@ interface UnitMarkerProps {
   onClick: () => void;
 }
 
-export function UnitMarker({ unit, x, y, isSelected, onClick }: UnitMarkerProps) {
+export function UnitMarker({ unit, x, y, isSelected, onClick }: UnitMarkerProps): React.ReactElement {
   return (
     <div
       className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all ${

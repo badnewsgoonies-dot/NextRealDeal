@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /*
  * Core type contracts for the game engine.
  * These types define interfaces between systems.
@@ -217,7 +218,7 @@ export interface RoundResult {
  * Individual combat action in the log
  */
 export interface CombatAction {
-  readonly type: 'attack' | 'dodge' | 'defeat';
+  readonly type: 'attack' | 'dodge' | 'defeat' | 'defend';
   readonly actorId: string;
   readonly targetId?: string;
   readonly damage?: number;
@@ -241,6 +242,68 @@ export interface IBattleSystem {
   // State access
   getBattleState(): BattleState | null;
   getCombatLog(): readonly CombatAction[];
+}
+
+/**
+ * Enhanced Battle System Types (Three-Action Combat)
+ */
+
+/**
+ * Three core combat actions
+ */
+export type CombatActionType = 'attack' | 'defend' | 'signature_skill';
+
+/**
+ * Action selection with validation
+ */
+export interface ActionSelection {
+  readonly actionType: CombatActionType;
+  readonly actorId: string;
+  readonly targetId?: string; // Required for attack and signature_skill
+}
+
+/**
+ * Action result with detailed effects
+ */
+export interface ActionResult {
+  readonly action: CombatActionType;
+  readonly damage: number;
+  readonly effects: readonly StatusEffect[];
+  readonly critical: boolean;
+  readonly dodged: boolean;
+  readonly description: string;
+}
+
+/**
+ * Status effect types
+ */
+export type StatusEffectType = 'weakened' | 'shielded' | 'poisoned' | 'blessed' | 'cursed';
+
+/**
+ * Status effect with duration and intensity
+ */
+export interface StatusEffect {
+  readonly type: StatusEffectType;
+  readonly duration: number;
+  readonly intensity: number;
+  readonly source: string;
+}
+
+/**
+ * Enhanced unit with status effects and cooldowns
+ */
+export interface EnhancedUnit extends Unit {
+  readonly statusEffects: readonly StatusEffect[];
+  readonly actionCooldowns: Record<CombatActionType, number>;
+}
+
+/**
+ * Action validation result
+ */
+export interface ActionValidation {
+  readonly valid: boolean;
+  readonly reason?: string;
+  readonly cooldownRemaining?: number;
 }
 
 /**
@@ -346,14 +409,158 @@ export interface IUnitSystem {
 }
 
 /**
+ * Enhanced Unit System Types (Character Progression)
+ */
+
+export type CharacterClass = 'warrior' | 'mage' | 'rogue' | 'paladin' | 'ranger';
+export type SkillEffectType = 'stat_bonus' | 'ability_unlock' | 'passive_effect';
+export type AbilityTarget = 'self' | 'enemy' | 'ally' | 'all_enemies' | 'all_allies';
+export type AbilityEffectType = 'damage' | 'heal' | 'buff' | 'debuff' | 'status_effect';
+export type EquipmentRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+export type EnhancementType = 'atk' | 'def' | 'speed' | 'hp' | 'mana';
+
+export interface SkillEffect {
+  readonly type: SkillEffectType;
+  readonly stat?: 'atk' | 'def' | 'speed' | 'hp' | 'crit_chance' | 'dodge_chance' | 'mana';
+  readonly value: number;
+  readonly abilityId?: string;
+  readonly description: string;
+}
+
+export interface SkillNode {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly cost: number;
+  readonly prerequisites: readonly string[];
+  readonly effects: readonly SkillEffect[];
+  readonly maxLevel: number;
+  readonly currentLevel: number;
+}
+
+export interface AbilityEffect {
+  readonly type: AbilityEffectType;
+  readonly value: number;
+  readonly target: AbilityTarget;
+  readonly duration?: number;
+  readonly statusEffect?: StatusEffectType;
+}
+
+export interface CharacterAbility {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly type: 'active' | 'passive';
+  readonly cooldown: number;
+  readonly cost: number;
+  readonly effects: readonly AbilityEffect[];
+  readonly unlockLevel: number;
+}
+
+export interface CharacterProgression {
+  readonly level: number;
+  readonly experience: number;
+  readonly experienceToNext: number;
+  readonly skillPoints: number;
+  readonly availableSkillPoints: number;
+  readonly unlockedAbilities: readonly string[];
+  readonly skillTree: readonly SkillNode[];
+}
+
+export interface EnhancedGameUnit extends GameUnit {
+  readonly characterClass: CharacterClass;
+  readonly progression: CharacterProgression;
+  readonly abilities: readonly CharacterAbility[];
+  readonly mana: number;
+  readonly maxMana: number;
+}
+
+export interface ExperienceGain {
+  readonly amount: number;
+  readonly leveledUp: boolean;
+  readonly newLevel: number;
+  readonly skillPointsGained: number;
+  readonly abilitiesUnlocked: readonly string[];
+}
+
+export interface SkillAllocation {
+  readonly skillId: string;
+  readonly newLevel: number;
+  readonly effectsApplied: readonly SkillEffect[];
+  readonly skillPointsRemaining: number;
+}
+
+export interface CharacterCreateConfig extends UnitCreateConfig {
+  readonly characterClass: CharacterClass;
+}
+
+export interface EquipmentEnhancement {
+  readonly level: number;
+  readonly enhancementBonus: number;
+  readonly enhancementType: EnhancementType;
+}
+
+export interface EnhancedEquipment extends Equipment {
+  readonly enhancement?: EquipmentEnhancement;
+  readonly durability: number;
+  readonly maxDurability: number;
+  readonly rarity: EquipmentRarity;
+}
+
+/**
  * Economy System Types
  */
 
 /**
- * Currency (single type: gold)
+ * Currency (legacy - gold only)
  */
 export interface Currency {
-  readonly gold: number;  // 0 to 999,999,999
+  readonly gold: number;
+}
+
+/**
+ * Progression currency (experience, upgrade points, skill points)
+ */
+export interface ProgressionCurrency {
+  readonly experience: number;
+  readonly upgradePoints: number;
+  readonly skillPoints: number;
+}
+
+/**
+ * Experience gain sources and multipliers
+ */
+export interface ExperienceGain {
+  readonly source: 'battle' | 'exploration' | 'quest' | 'discovery';
+  readonly amount: number;
+  readonly multiplier: number;
+}
+
+/**
+ * Upgrade currency gain
+ */
+export interface UpgradeGain {
+  readonly source: 'battle' | 'exploration' | 'quest' | 'discovery';
+  readonly amount: number;
+  readonly type: 'upgrade_points' | 'skill_points';
+}
+
+/**
+ * Enhancement cost
+ */
+export interface EnhancementCost {
+  readonly upgradePoints: number;
+  readonly experience: number;
+  readonly materials?: readonly string[];
+}
+
+/**
+ * Combined progression reward
+ */
+export interface ProgressionReward {
+  readonly experience: ExperienceGain;
+  readonly upgrades: readonly UpgradeGain[];
+  readonly items: readonly ItemDrop[];
 }
 
 /**
@@ -363,7 +570,7 @@ export interface Item {
   readonly id: string;
   readonly name: string;
   readonly type: 'weapon' | 'armor' | 'accessory' | 'consumable';
-  readonly value: number;  // Gold value
+  readonly value: number;
   readonly stats?: {
     readonly atkBonus?: number;
     readonly defBonus?: number;
@@ -377,20 +584,20 @@ export interface Item {
  */
 export interface ItemDrop {
   readonly itemId: string;
-  readonly probability: number;  // 0-100
+  readonly probability: number;
 }
 
 /**
- * Shop item configuration
+ * Shop item configuration (legacy)
  */
 export interface ShopInventory {
   readonly itemId: string;
-  readonly stock: number;  // -1 = infinite
+  readonly stock: number;
   readonly price: number;
 }
 
 /**
- * Player's complete inventory
+ * Player's inventory (legacy)
  */
 export interface PlayerInventory {
   readonly currency: Currency;
@@ -398,10 +605,18 @@ export interface PlayerInventory {
 }
 
 /**
+ * Player's progression inventory
+ */
+export interface ProgressionInventory {
+  readonly currency: ProgressionCurrency;
+  readonly items: readonly Item[];
+}
+
+/**
  * Economy System interface
  */
 export interface IEconomySystem {
-  // Currency management
+  // Currency management (legacy)
   modifyCurrency(playerId: string, delta: number, signal?: AbortSignal): Promise<Result<Currency, string>>;
   getCurrency(playerId: string): Currency;
   
@@ -410,7 +625,7 @@ export interface IEconomySystem {
   removeItem(playerId: string, itemId: string, signal?: AbortSignal): Promise<Result<void, string>>;
   getInventory(playerId: string): PlayerInventory;
   
-  // Shop system
+  // Shop system (legacy)
   purchaseItem(playerId: string, itemId: string, signal?: AbortSignal): Promise<Result<Item, string>>;
   sellItem(playerId: string, itemId: string, signal?: AbortSignal): Promise<Result<number, string>>;
   getShopInventory(): readonly ShopInventory[];
@@ -418,13 +633,21 @@ export interface IEconomySystem {
   // Loot system
   rollLoot(dropTable: ItemDrop[], signal?: AbortSignal): Promise<Result<Item | null, string>>;
   
-  // Battle rewards
+  // Battle rewards (legacy)
   awardBattleReward(
     playerId: string,
     goldReward: number,
     itemDrops: ItemDrop[],
     signal?: AbortSignal
   ): Promise<Result<{ gold: number; items: Item[] }, string>>;
+  
+  // Progression currency (new)
+  getProgressionCurrency?(playerId: string): ProgressionCurrency;
+  grantExperience?(playerId: string, experience: ExperienceGain, signal?: AbortSignal): Promise<Result<number, string>>;
+  grantUpgradeCurrency?(playerId: string, upgrade: UpgradeGain, signal?: AbortSignal): Promise<Result<number, string>>;
+  spendUpgradePoints?(playerId: string, cost: EnhancementCost, signal?: AbortSignal): Promise<Result<void, string>>;
+  awardProgressionReward?(playerId: string, reward: ProgressionReward, signal?: AbortSignal): Promise<Result<void, string>>;
+  getProgressionInventory?(playerId: string): ProgressionInventory;
 }
 
 /**
@@ -512,6 +735,69 @@ export interface IRouteSystem {
 
   serialize(): string;
   deserialize(json: string): Result<void, RouteError>;
+}
+
+/**
+ * Enhanced Route System Types (v2 - Slay the Spire-style meta-map)
+ */
+
+/**
+ * Node types for Slay the Spire-style meta-map
+ */
+export type NodeType = 'battle' | 'elite_battle' | 'rest_site' | 'shop' | 'event' | 'boss';
+
+/**
+ * Reward preview for route nodes
+ */
+export interface RewardPreview {
+  readonly gold: number;
+  readonly items: readonly string[];
+  readonly experience: number;
+}
+
+/**
+ * Route node with position and connections
+ */
+export interface RouteNode {
+  readonly id: string;
+  readonly type: NodeType;
+  readonly position: { x: number; y: number };
+  readonly connections: readonly string[];
+  readonly difficulty: number;
+  readonly rewards: RewardPreview;
+  readonly description: string;
+}
+
+/**
+ * Route graph structure
+ */
+export interface RouteGraph {
+  readonly nodes: readonly RouteNode[];
+  readonly connections: readonly { from: string; to: string }[];
+  readonly startNode: string;
+  readonly endNode: string;
+  readonly layers: readonly (readonly string[])[];
+}
+
+/**
+ * Visual route data for UI rendering
+ */
+export interface RouteVisualization {
+  readonly svgPath: string;
+  readonly nodePositions: Record<string, { x: number; y: number }>;
+  readonly connections: readonly { from: string; to: string; path: string }[];
+  readonly bounds: { width: number; height: number };
+}
+
+/**
+ * Enhanced choice with node type and visual data
+ */
+export interface EnhancedChoice extends Choice {
+  readonly nodeType: NodeType;
+  readonly difficulty: number;
+  readonly rewards: RewardPreview;
+  readonly description: string;
+  readonly visualPosition: { x: number; y: number };
 }
 
 /**

@@ -16,14 +16,14 @@ const columns = [
   { key: 'createdAt' as keyof Encounter, label: 'Created', sortable: true },
 ];
 
-export function EncounterExplorer() {
+export function EncounterExplorer(): React.ReactElement {
   const [query, setQuery] = useState<EncountersQuery>({ page: 1, pageSize: 12 });
   const [sortBy, setSortBy] = useState<'createdAt' | 'step'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const { data, loading, error, refetch } = useEncounters({ ...query, sortBy, sortOrder });
 
-  const handleSort = (key: keyof Encounter) => {
+  const handleSort = (key: keyof Encounter): void => {
     if (key === 'createdAt' || key === 'step') {
       if (sortBy === key) {
         setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -37,6 +37,19 @@ export function EncounterExplorer() {
   if (loading) return <Loading />;
   if (error) return <Error message={error} onRetry={refetch} />;
 
+  return <EncounterContent query={query} setQuery={setQuery} data={data} sortBy={sortBy} sortOrder={sortOrder} handleSort={handleSort} />;
+}
+
+interface EncounterContentProps {
+  query: EncountersQuery;
+  setQuery: (query: EncountersQuery) => void;
+  data: { encounters: Encounter[]; total: number } | undefined;
+  sortBy: 'createdAt' | 'step';
+  sortOrder: 'asc' | 'desc';
+  handleSort: (key: keyof Encounter) => void;
+}
+
+function EncounterContent({ query, setQuery, data, sortBy, sortOrder, handleSort }: EncounterContentProps): React.ReactElement {
   const encounters = data?.encounters || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / (query.pageSize || 12));
@@ -59,7 +72,7 @@ export function EncounterExplorer() {
           />
           <Select
             value={query.result || 'all'}
-            onChange={(e) => setQuery({ ...query, result: e.target.value as any, page: 1 })}
+            onChange={(e) => setQuery({ ...query, result: e.target.value as 'win' | 'loss', page: 1 })}
             options={[
               { value: 'all', label: 'All Results' },
               { value: 'win', label: 'Wins' },

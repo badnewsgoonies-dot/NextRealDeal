@@ -335,10 +335,10 @@ describe('BattleManager', () => {
     });
 
     test('logs dodges with sequence numbers', async () => {
-      // Run many battles until we get a dodge
+      // Run many battles until we get a dodge (5% chance, so 200 iterations for 99.99% confidence)
       let dodgeLogged = false;
       
-      for (let i = 0; i < 50 && !dodgeLogged; i++) {
+      for (let i = 0; i < 200 && !dodgeLogged; i++) {
         const testManager = new BattleManager(logger, makeRng(i + 10000));
         await testManager.initialize();
         

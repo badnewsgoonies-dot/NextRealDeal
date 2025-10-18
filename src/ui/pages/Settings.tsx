@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from '../components/common/Card';
 import { useTheme } from '../context/ThemeContext';
 
-export function Settings() {
+export function Settings(): React.ReactElement {
   const { theme, toggleTheme } = useTheme();
 
   return (

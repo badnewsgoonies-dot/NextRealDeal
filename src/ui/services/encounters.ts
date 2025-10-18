@@ -2,10 +2,11 @@ import { mockEncounters, mockEncountersSummary } from './mockData';
 import type { Encounter, EncountersSummary, EncountersQuery } from '../types';
 
 // Simulate latency
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
-// Simulate occasional failures
-const maybeFail = () => Math.random() < 0.1; // 10% failure rate
+// Simulate occasional failures (Math.random allowed in mock services)
+// eslint-disable-next-line no-restricted-properties
+const maybeFail = (): boolean => Math.random() < 0.1; // 10% failure rate
 
 export async function listEncounters(params: EncountersQuery = {}): Promise<{ encounters: Encounter[]; total: number }> {
   await delay(200);

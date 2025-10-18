@@ -7,7 +7,7 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children }: LayoutProps): React.ReactElement {
   const location = useLocation();
   const isBattleScreen = location.pathname === '/battle';
 

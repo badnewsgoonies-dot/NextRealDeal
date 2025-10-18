@@ -10,7 +10,7 @@ interface IsometricStageProps {
   onUnitClick: (unit: Unit) => void;
 }
 
-export function IsometricStage({ gridW, gridH, units, selectedId, onUnitClick }: IsometricStageProps) {
+export function IsometricStage({ gridW, gridH, units, selectedId, onUnitClick }: IsometricStageProps): React.ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
@@ -34,7 +34,7 @@ export function IsometricStage({ gridW, gridH, units, selectedId, onUnitClick }:
   }, []);
 
   // Calculate responsive tile size
-  const calculateTileSize = () => {
+  const calculateTileSize = (): { tileW: number; tileH: number } => {
     const { width, height } = dimensions;
     // Isometric diamond width = (gridW + gridH) * tileW
     // Isometric diamond height = (gridW + gridH) * tileH / 2
@@ -48,7 +48,7 @@ export function IsometricStage({ gridW, gridH, units, selectedId, onUnitClick }:
   };
 
   // Calculate isometric position
-  const getPosition = (x: number, y: number) => {
+  const getPosition = (x: number, y: number): { x: number; y: number } => {
     const { width, height } = dimensions;
     const { tileW, tileH } = calculateTileSize();
     const centerX = width / 2;
@@ -94,8 +94,8 @@ export function IsometricStage({ gridW, gridH, units, selectedId, onUnitClick }:
       {/* Unit markers */}
       {units.map(unit => {
         // Support both x/y and tx/ty coordinate names
-        const unitX = 'x' in unit ? unit.x : (unit as any).tx ?? 0;
-        const unitY = 'y' in unit ? unit.y : (unit as any).ty ?? 0;
+        const unitX = 'x' in unit ? unit.x : (unit as { tx?: number }).tx ?? 0;
+        const unitY = 'y' in unit ? unit.y : (unit as { ty?: number }).ty ?? 0;
         const pos = getPosition(unitX, unitY);
         return (
           <UnitMarker

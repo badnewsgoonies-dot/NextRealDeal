@@ -21,15 +21,22 @@ import type {
 } from '../types/contracts.js';
 import { makeAsyncQueue } from '../util/AsyncQueue.js';
 import { ok, err, type Result } from '../util/Result.js';
+import { GameStateMachine } from './state/GameStateMachine.js';
+import { RngStreams } from '../util/RngStreams.js';
+import type { IRng } from '../util/Rng.js';
+import type { GameState } from './state/GameState.js';
 
 /**
  * GameController implementation
  */
 export class GameController extends SystemTemplate implements IGameController {
   private readonly queue = makeAsyncQueue();
+  private readonly fsm = new GameStateMachine();
+  private readonly rngStreams: RngStreams;
 
   constructor(
     protected readonly log: ILogger,
+    private readonly rng: IRng,
     private readonly mapSystem: IMapSystem,
     private readonly battleSystem: IBattleSystem,
     private readonly unitSystem: IUnitSystem,
@@ -38,6 +45,7 @@ export class GameController extends SystemTemplate implements IGameController {
     private readonly saveSystem: ISaveSystem
   ) {
     super({ name: 'GameController' });
+    this.rngStreams = new RngStreams(rng);
   }
 
   // ========================================
@@ -120,6 +128,22 @@ export class GameController extends SystemTemplate implements IGameController {
 
   getSaveManager(): ISaveSystem {
     return this.saveSystem;
+  }
+
+  // ========================================
+  // State Machine Access
+  // ========================================
+
+  getState(): GameState {
+    return this.fsm.getState();
+  }
+
+  getStateHistory(): readonly GameState[] {
+    return this.fsm.getHistory();
+  }
+
+  getRngStreams(): RngStreams {
+    return this.rngStreams;
   }
 
   // ========================================

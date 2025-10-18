@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { listEncounters, encountersSummary } from '../services/encounters';
 import type { Encounter, EncountersSummary, EncountersQuery } from '../types';
 
-export function useEncounters(params: EncountersQuery = {}) {
+export function useEncounters(params: EncountersQuery = {}): React.ReactElement {
   const [data, setData] = useState<{ encounters: Encounter[]; total: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export function useEncounters(params: EncountersQuery = {}) {
   return { data, loading, error, refetch: fetch };
 }
 
-export function useEncountersSummary() {
+export function useEncountersSummary(): React.ReactElement {
   const [data, setData] = useState<EncountersSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

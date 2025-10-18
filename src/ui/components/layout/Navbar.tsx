@@ -10,7 +10,7 @@ const navItems = [
   { path: '/battle', label: 'Battle' },
 ];
 
-export function Navbar() {
+export function Navbar(): React.ReactElement {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 

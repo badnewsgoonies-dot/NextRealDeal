@@ -5,7 +5,7 @@ interface PartyMiniProps {
   party: Unit[];
 }
 
-export function PartyMini({ party }: PartyMiniProps) {
+export function PartyMini({ party }: PartyMiniProps): React.ReactElement {
   return (
     <div className="bg-black bg-opacity-60 border border-white border-opacity-15 rounded-lg p-4 w-64">
       <h3 className="text-white font-semibold mb-3">Party</h3>
