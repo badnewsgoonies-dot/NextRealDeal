@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /*
  * Core type contracts for the game engine.
  * These types define interfaces between systems.
