@@ -217,7 +217,7 @@ export interface RoundResult {
  * Individual combat action in the log
  */
 export interface CombatAction {
-  readonly type: 'attack' | 'dodge' | 'defeat';
+  readonly type: 'attack' | 'dodge' | 'defeat' | 'defend';
   readonly actorId: string;
   readonly targetId?: string;
   readonly damage?: number;
@@ -241,6 +241,68 @@ export interface IBattleSystem {
   // State access
   getBattleState(): BattleState | null;
   getCombatLog(): readonly CombatAction[];
+}
+
+/**
+ * Enhanced Battle System Types (Three-Action Combat)
+ */
+
+/**
+ * Three core combat actions
+ */
+export type CombatActionType = 'attack' | 'defend' | 'signature_skill';
+
+/**
+ * Action selection with validation
+ */
+export interface ActionSelection {
+  readonly actionType: CombatActionType;
+  readonly actorId: string;
+  readonly targetId?: string; // Required for attack and signature_skill
+}
+
+/**
+ * Action result with detailed effects
+ */
+export interface ActionResult {
+  readonly action: CombatActionType;
+  readonly damage: number;
+  readonly effects: readonly StatusEffect[];
+  readonly critical: boolean;
+  readonly dodged: boolean;
+  readonly description: string;
+}
+
+/**
+ * Status effect types
+ */
+export type StatusEffectType = 'weakened' | 'shielded' | 'poisoned' | 'blessed' | 'cursed';
+
+/**
+ * Status effect with duration and intensity
+ */
+export interface StatusEffect {
+  readonly type: StatusEffectType;
+  readonly duration: number;
+  readonly intensity: number;
+  readonly source: string;
+}
+
+/**
+ * Enhanced unit with status effects and cooldowns
+ */
+export interface EnhancedUnit extends Unit {
+  readonly statusEffects: readonly StatusEffect[];
+  readonly actionCooldowns: Record<CombatActionType, number>;
+}
+
+/**
+ * Action validation result
+ */
+export interface ActionValidation {
+  readonly valid: boolean;
+  readonly reason?: string;
+  readonly cooldownRemaining?: number;
 }
 
 /**
