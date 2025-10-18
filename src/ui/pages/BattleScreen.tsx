@@ -92,7 +92,7 @@ export function BattleScreen() {
                      battleState.enemies.find(u => u.id === battleState.activeId);
 
   return (
-    <div className="relative w-full min-h-[calc(100vh-4rem)] bg-gray-900">
+    <div className="relative w-full h-[calc(100vh-4rem)] bg-gray-900 overflow-hidden">
       {/* Top-left: Enemy List */}
       <div className="absolute top-4 left-4 z-10">
         <EnemyList enemies={battleState.enemies} />
@@ -104,14 +104,16 @@ export function BattleScreen() {
       </div>
 
       {/* Center: Isometric Stage */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <IsometricStage
-          gridW={battleState.gridW}
-          gridH={battleState.gridH}
-          units={[...battleState.party, ...battleState.enemies]}
-          selectedId={selectedId}
-          onUnitClick={handleUnitClick}
-        />
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="pointer-events-auto">
+          <IsometricStage
+            gridW={battleState.gridW}
+            gridH={battleState.gridH}
+            units={[...battleState.party, ...battleState.enemies]}
+            selectedId={selectedId}
+            onUnitClick={handleUnitClick}
+          />
+        </div>
       </div>
 
       {/* Bottom-left: Status HUD */}
