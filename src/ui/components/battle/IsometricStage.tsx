@@ -69,7 +69,7 @@ export function IsometricStage({ gridW, gridH, units, selectedId, onUnitClick }:
   return (
     <div 
       ref={containerRef}
-      className="relative w-full max-w-[1100px] h-[min(70vh,640px)] bg-gradient-to-b from-blue-200 to-blue-400 dark:from-blue-900 dark:to-blue-950 rounded-lg overflow-hidden"
+      className="relative w-full max-w-[1100px] h-[min(70vh,640px)] bg-gradient-to-b from-blue-900 to-blue-950 rounded-lg overflow-hidden"
     >
       {/* Grid lines for diamond pattern */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none">

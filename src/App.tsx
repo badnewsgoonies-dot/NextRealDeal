@@ -1,6 +1,5 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from './ui/context/ThemeContext';
 import { Layout } from './ui/components/layout/Layout';
 import { Overview } from './ui/pages/Overview';
 import { RunsManager } from './ui/pages/RunsManager';
@@ -10,7 +9,7 @@ import { Loading } from './ui/components/common/States';
 import { useToast } from './ui/components/common/Toast';
 
 // Lazy load battle route
-const BattleScreen = React.lazy(() => import('./ui/pages/BattleScreen').then(module => ({ default: module.BattleScreen })));
+const BattleScreen = lazy(() => import('./ui/pages/BattleScreen').then(module => ({ default: module.BattleScreen })));
 
 function AppContent(): React.ReactElement {
   const { ToastContainer } = useToast();
@@ -33,13 +32,11 @@ function AppContent(): React.ReactElement {
   );
 }
 
-export function App(): JSX.Element {
+export function App(): React.ReactElement {
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
-    </ThemeProvider>
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 

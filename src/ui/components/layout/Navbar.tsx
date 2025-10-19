@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
 
 const navItems = [
   { path: '/', label: 'Overview' },
@@ -11,7 +10,6 @@ const navItems = [
 ];
 
 export function Navbar(): React.ReactElement {
-  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 
   return (
@@ -34,13 +32,6 @@ export function Navbar(): React.ReactElement {
           ))}
         </div>
       </div>
-      <button
-        onClick={toggleTheme}
-        className="p-2 rounded-md text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
-        aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
-      >
-        {theme === 'light' ? '🌙' : '☀️'}
-      </button>
     </nav>
   );
 }
