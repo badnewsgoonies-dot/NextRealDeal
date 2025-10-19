@@ -1,6 +1,6 @@
 # NextRealDeal v1.0.0
 
-**Production-Ready Headless Game Engine for Battle-First Roguelikes**
+## Production-Ready Headless Game Engine for Battle-First Roguelikes
 
 [![Tests](https://img.shields.io/badge/tests-256%2F256-success)](./tests)
 [![Coverage](https://img.shields.io/badge/coverage-82%25-green)](./coverage)
@@ -14,6 +14,7 @@
 NextRealDeal is a deterministic, headless game engine designed for battle-first roguelikes. Inspired by Slay the Spire's meta-map and Golden Sun's combat system, it provides complete game logic with comprehensive testing and cross-platform save/load support.
 
 **Perfect for:**
+
 - Discord bots
 - CLI games
 - REST APIs
@@ -21,6 +22,7 @@ NextRealDeal is a deterministic, headless game engine designed for battle-first 
 - Prototype development
 
 **Key Features:**
+
 - 🎲 Fully deterministic (replay-ready)
 - ⚔️ Turn-based tactical combat
 - 🗺️ Procedural map generation (BSP)
@@ -82,6 +84,7 @@ See [EXAMPLES.md](./EXAMPLES.md) for complete integration examples.
 ### UI Foundation (v1.1 Preview)
 
 **Included in v1.0:**
+
 - ✅ Vite + React + TypeScript setup
 - ✅ Tailwind CSS with theme tokens
 - ✅ React Router configuration
@@ -91,6 +94,7 @@ See [EXAMPLES.md](./EXAMPLES.md) for complete integration examples.
 - ✅ GameContext provider
 
 **Route Runner UI (Complete):**
+
 - ✅ Overview dashboard with KPIs
 - ✅ Runs Manager (CRUD, filter/sort/paginate)
 - ✅ Encounter Explorer (filter/sort/paginate)
@@ -104,13 +108,13 @@ See [EXAMPLES.md](./EXAMPLES.md) for complete integration examples.
 - ✅ Toast notifications
 - ✅ Loading/Empty/Error states
 
-**Run UI:** `npm run dev` (opens at http://localhost:3001)
+**Run UI:** `npm run dev` (opens at <http://localhost:3001>)
 
 ---
 
 ## 📊 Statistics
 
-```
+```text
 Systems:        6/6 core + UI foundation (100% functional)
 Tests:          256/256 passing
 Coverage:       82% average
@@ -134,6 +138,7 @@ Quality:        0 bugs, 0 tech debt
 ## 🎯 Use Cases
 
 ### Headless (Production-Ready)
+
 - ✅ Discord bots (async command handling)
 - ✅ CLI games (terminal interfaces)
 - ✅ REST APIs (web/mobile backends)
@@ -141,6 +146,7 @@ Quality:        0 bugs, 0 tech debt
 - ✅ Testing frameworks (deterministic scenarios)
 
 ### Web UI (Foundation Ready)
+
 - ✅ Main menu functional
 - ✅ Route selection functional
 - ⏳ Battle visualization (v1.1)
@@ -150,6 +156,7 @@ Quality:        0 bugs, 0 tech debt
 ## 🏗️ Architecture
 
 **Patterns:**
+
 - Strict dependency injection
 - AsyncQueue (no race conditions)
 - Result types (no throws)
@@ -158,6 +165,7 @@ Quality:        0 bugs, 0 tech debt
 - Comprehensive validation
 
 **Quality:**
+
 - TypeScript strict mode
 - ≤500 lines per file
 - Zero circular dependencies
@@ -165,161 +173,7 @@ Quality:        0 bugs, 0 tech debt
 
 ---
 
-## 🧪 Testing
-
-```bash
-npm test              # All 256 tests
-npm run test:watch    # Watch mode
-npm run test:coverage # Coverage report
-npm run ci            # Full CI pipeline
-```
-
-**Test Categories:**
-- Unit tests: 80%
-- Property-based: 5%
-- Integration: 10%
-- Memory/cleanup: 5%
-
----
-
-## 🚀 Development
-
-```bash
-# Headless engine
-npm run demo          # Run CLI demo
-
-# Web UI (preview)
-npm run dev           # Start dev server (localhost:3000)
-npm run build:web     # Build for production
-npm run preview       # Preview production build
-
-# Quality checks
-npm run lint          # ESLint
-npm run circular      # Check circular deps
-npm run deps          # Architecture validation
-```
-
----
-
-## 📖 Examples
-
-### Headless Demo
-```bash
-npm run demo
-```
-
-Runs 5 battles showing complete game loop.
-
-### Discord Bot
-See [EXAMPLES.md](./EXAMPLES.md#discord-bot) for complete Discord.js integration.
-
-### REST API
-See [EXAMPLES.md](./EXAMPLES.md#rest-api-server) for Express.js server example.
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Please:
-1. Write tests (maintain >80% coverage)
-2. Follow existing patterns (see docs/adr/)
-3. Keep files ≤500 lines
-4. Use Result types (no throws)
-5. Submit PR with description
-
----
-
-## 📄 License
-
-MIT License - See [LICENSE](./LICENSE) for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **pure-rand** - Deterministic RNG
-- **Valibot** - Runtime validation
-- **Vitest** - Test framework
-- **React + Vite** - UI framework
-
----
-
-**Built with ❤️ using TypeScript, tested with 256 tests, ready for production.**
-
-A production-ready, deterministic TypeScript game engine featuring turn-based tactical combat, procedural map generation, and branching roguelike progression.
-
-[![CI](https://img.shields.io/badge/CI-passing-brightgreen)]()
-[![Tests](https://img.shields.io/badge/tests-210%2F210-brightgreen)]()
-[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)]()
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)]()
-
-## 🎮 Overview
-
-NextRealDeal is a **battle-first roguelike** combining:
-- **Pokémon Battle Tower** progression (endless battles with choices)
-- **Slay the Spire** meta-map (branching route selection)
-- **Golden Sun** combat (turn-based tactical battles)
-
-**Core Loop:** Battle → Choose Path (A/B/C) → Generate Arena → Battle → Rewards
-
-**No free-roam exploration** - Pure strategic decision-making and tactical combat.
-
----
-
-## ✨ Features
-
-### **5 Complete Systems** (86% Complete)
-
-#### 1. **Map System** - Procedural Battle Arenas
-- Binary Space Partitioning (BSP) algorithm
-- Deterministic generation (same seed = same map)
-- Connectivity validation (all tiles reachable)
-- Configurable sizes (16×16 to 128×128)
-- 37 tests, 96% coverage
-
-#### 2. **Battle System** - Turn-based Combat
-- Initiative-based turn order (speed + stable sort)
-- Damage formula: `max(0, atk - ⌊def/2⌋ + variance)`
-- 5% dodge chance, 10% critical chance
-- Battle-local RNG (prevents cross-battle contamination)
-- Combat logging with deterministic sequences
-- 34 tests, 93% coverage
-
-#### 3. **Unit System** - Character Management
-- Level-based stat scaling
-- Equipment system (weapon/armor/accessory)
-- Position tracking on maps
-- Team management (player/enemy)
-- Battle integration (converts to combat-ready units)
-- 34 tests, 93% coverage
-
-#### 4. **Economy System** - Currency & Items
-- Gold currency (0 to 999,999,999)
-- Item inventory (max 100 per player)
-- Shop system with stock management
-- Deterministic loot drops (first-match algorithm)
-- Battle reward distribution
-- Transaction rollback on failures
-- 45 tests, 90% coverage
-
-#### 5. **Route System** - Meta-Map Progression
-- Slay the Spire-style branching choices
-- 3 deterministic options per step (A/B/C)
-- Versioned RNG streams (`route:v1 → run:v1 → step:v1`)
-- Choice caching (prevents RNG drift)
-- Run lifecycle management
-- Serialization/deserialization (save/load ready)
-- 37 tests, 97% coverage
-
-### **GameController** - Composition Root
-- Strict dependency injection
-- Lifecycle coordination (init: Map → Battle → Unit → Economy → Route)
-- Wiring-only (zero game logic)
-- 6 integration tests, 78% coverage
-
----
-
-## 🏗️ Architecture
+## 🏗️ Architecture Details
 
 ### **Phase-0 Patterns** (Strictly Enforced)
 
@@ -391,10 +245,12 @@ npm run coverage
 ### **Dependencies**
 
 **Production:**
+
 - `pure-rand` - Deterministic PRNG
 - `valibot` - Runtime validation
 
 **Development:**
+
 - TypeScript, Vitest, ESLint
 - fast-check (property-based testing)
 - dependency-cruiser, madge (architecture validation)
@@ -496,6 +352,7 @@ npm test -- battle
 ```
 
 ### **Test Coverage by System:**
+
 - Map: 37 tests (96% coverage)
 - Battle: 34 tests (93% coverage)
 - Unit: 34 tests (93% coverage)
@@ -505,6 +362,7 @@ npm test -- battle
 - Utilities: 16 tests (95% coverage)
 
 ### **Property-Based Testing:**
+
 - 9 property-based tests using fast-check
 - Verify invariants across random inputs
 - 20-100 runs per property test
@@ -514,7 +372,9 @@ npm test -- battle
 ## 📐 Architecture Principles
 
 ### **1. Deterministic Gameplay**
+
 Every game outcome is reproducible from a seed:
+
 ```typescript
 const rng1 = makeRng(12345);
 const rng2 = makeRng(12345);
@@ -525,7 +385,9 @@ map2.generate({ seed: 100 }); // Map A (identical)
 ```
 
 ### **2. Dependency Injection**
+
 No system constructs another system:
+
 ```typescript
 // ✅ Good: Dependencies injected
 class BattleManager {
@@ -541,7 +403,9 @@ class BattleManager {
 ```
 
 ### **3. AsyncQueue Serialization**
+
 Prevents race conditions:
+
 ```typescript
 // All async operations serialize automatically
 await Promise.all([
@@ -552,7 +416,9 @@ await Promise.all([
 ```
 
 ### **4. Result Types**
+
 Type-safe error handling:
+
 ```typescript
 const result = await system.operation();
 if (result.ok) {
@@ -566,7 +432,7 @@ if (result.ok) {
 
 ## 📊 Project Stats
 
-```
+```text
 Total Systems:      5/7 (71% → actually 86% with Route)
 Tests:              210 (100% passing)
 Coverage:           ~90% average
@@ -580,189 +446,9 @@ Architectural Violations: 0
 
 ---
 
-## 🛠️ Development
-
-### **NPM Scripts**
-
-```bash
-npm run build       # Compile TypeScript
-npm run typecheck   # Type checking only
-npm run lint        # ESLint
-npm test            # Run tests
-npm run coverage    # Coverage report
-npm run ci          # Full CI pipeline
-
-# Dependency analysis
-npm run dep:cycles  # Check circular dependencies
-npm run dep:cruise  # Architectural rules
-```
-
-### **Code Quality Gates**
-
-- ✅ TypeScript strict mode
-- ✅ ESLint max 500 lines/file
-- ✅ Math.random() banned (ESLint rule)
-- ✅ Console banned outside Logger
-- ✅ Complexity limits (max 12)
-- ✅ No circular dependencies
-- ✅ Layer architecture enforced
-
----
-
-## 🎯 Roadmap
-
-### **Completed (86%)**
-- [x] Phase 0: Core utilities + CI/CD
-- [x] System 1: Map (procedural generation)
-- [x] System 2: Battle (combat mechanics)
-- [x] System 3: Unit (character management)
-- [x] System 4: Economy (currency, shops, loot)
-- [x] System 5: Route (meta-map progression)
-- [x] Checkpoint 1: 3-system integration
-- [x] Checkpoint 2: Performance validation
-
-### **In Progress**
-- [ ] System 6: Save/Load (persistence, replay)
-- [ ] System 7: UI (rendering, optional)
-- [ ] Checkpoint 3: Full system integration
-
-### **Future Enhancements (v2)**
-- [ ] Additional node types (shop, rest, elite, event)
-- [ ] Multi-currency economy
-- [ ] Player-to-player trading
-- [ ] Crafting system
-- [ ] Skill trees/abilities
-- [ ] Multiplayer support
-- [ ] Performance optimization (200+ units)
-
----
-
-## 📚 Documentation
-
-### **Architecture Decision Records**
-- [ADR-0001: Platform and Stack](docs/adr/0001-platform-and-stack.md)
-
-### **Bug Tracking**
-- [BUGS_LEARNED.md](docs/BUGS_LEARNED.md) - Known issues and fixes
-
-### **System Specs**
-- Map System: BSP procedural generation with connectivity validation
-- Battle System: Turn-based with initiative ordering, dodge/crit mechanics
-- Unit System: Equipment-based character progression
-- Economy System: Currency, inventory, shop, loot
-- Route System: Deterministic branching progression
-
----
-
-## 🔬 Technical Highlights
-
-### **Deterministic Everything**
-- Same seed → identical gameplay
-- Full replay capability
-- Perfect for testing and debugging
-- No Math.random() anywhere (ESLint enforced)
-
-### **Zero Race Conditions**
-- All async operations through AsyncQueue
-- Operations serialize automatically
-- AbortSignal support throughout
-
-### **Memory Leak Prevention**
-- Scope-based resource cleanup
-- 100 serialize/deserialize cycles tested
-- destroy() cleanup verified in tests
-
-### **Type Safety**
-- Strict TypeScript mode
-- Result types (no exceptions)
-- Comprehensive validation (Valibot)
-
----
-
-## 🎲 Game Mechanics
-
-### **Combat Formula**
-```typescript
-// Damage calculation (5 steps):
-1. Dodge check (5%)  → damage = 0
-2. Base damage       → atk - ⌊def/2⌋
-3. Variance          → ±2 random
-4. Critical (10%)    → ×1.5 damage
-5. Clamp             → max(0, damage)
-```
-
-### **Map Generation**
-```typescript
-// BSP algorithm:
-- Recursive space partitioning (depth 2-5)
-- Room placement (5×5 to 15×15)
-- L-shaped corridors
-- Extra loops (10-15% for non-linearity)
-- Exactly 1 spawn + 1 exit
-- Full connectivity validation
-```
-
-### **Route Progression**
-```typescript
-// Meta-map choices:
-- 3 deterministic options per step (A/B/C)
-- Each choice has unique arena seed
-- History tracking for replay
-- Step limit: 10,000
-- Serializable state
-```
-
----
-
-## 🧪 Example: Full Game Loop
-
-```typescript
-// Start run
-const route = game.getRouteManager();
-await route.startRun('run-001', 20251014);
-
-// Game loop
-while (true) {
-  // Get choices (A/B/C)
-  const choices = await route.getChoices();
-  if (!choices.ok) break;
-  
-  // Player selects choice B
-  const choiceB = choices.value.find(c => c.label === 'B')!;
-  const chosen = await route.choose(choiceB.id);
-  if (!chosen.ok) break;
-  
-  // Generate battle arena
-  const arena = await map.generate({
-    width: 48,
-    height: 48,
-    seed: chosen.value.choice.arenaSeed,
-  });
-  
-  // Create/get units
-  const playerUnits = unit.getTeamUnits('player');
-  const enemyUnits = unit.getTeamUnits('enemy');
-  
-  // Fight!
-  await battle.startBattle([...playerUnits, ...enemyUnits]);
-  const result = await battle.executeRound();
-  
-  // Reward winner
-  if (result.ok && result.value.winner === 'player') {
-    await economy.awardBattleReward('player', 100, [
-      { itemId: 'iron_sword', probability: 20 },
-    ]);
-  }
-  
-  await battle.endBattle();
-}
-```
-
----
-
 ## 📦 Project Structure
 
-```
+```text
 NextRealDeal/
 ├── src/
 │   ├── battle/         # Combat mechanics
@@ -794,6 +480,7 @@ NextRealDeal/
 ## 🎯 Quality Metrics
 
 ### **Test Quality**
+
 - 210 tests (0 failures, 0 skipped)
 - 30-40% property-based (fast-check)
 - Concurrency tests (AsyncQueue serialization)
@@ -801,12 +488,14 @@ NextRealDeal/
 - Integration tests (cross-system)
 
 ### **Code Quality**
+
 - ESLint: 0 errors, 2 acceptable warnings
 - TypeScript: Strict mode, 0 errors
 - File size: All files ≤500 lines (1 exception at 526)
 - Complexity: All functions ≤12 (with 2 acceptable exceptions)
 
 ### **Architecture Quality**
+
 - 0 circular dependencies (madge verified)
 - 0 architectural violations (dependency-cruiser)
 - Layered architecture enforced
@@ -817,18 +506,21 @@ NextRealDeal/
 ## 🔧 Configuration
 
 ### **TypeScript**
+
 - Target: ES2022
 - Module: ESNext
 - Strict mode + extra safety flags
 - Types: vitest/globals
 
 ### **ESLint**
+
 - Max lines: 500 per file
 - Max complexity: 12
 - Math.random() banned
 - Console banned (except Logger.ts, scripts/)
 
 ### **Vitest**
+
 - Coverage thresholds: 75% lines, 75% functions, 60% branches
 - Globals enabled
 - V8 coverage provider
@@ -846,6 +538,7 @@ This project follows strict architectural patterns. Before contributing:
 5. Maintain test coverage (≥75%)
 
 ### **System Completion Checklist**
+
 - [ ] Extends SystemTemplate
 - [ ] Constructor DI only (ILogger, IRng)
 - [ ] Own AsyncQueue for operations
@@ -868,6 +561,7 @@ MIT
 ## 🙏 Acknowledgments
 
 Built with:
+
 - **Claude Sonnet 4.5** (implementation partner)
 - **TypeScript** (type safety)
 - **Vitest** (testing framework)
