@@ -9,8 +9,6 @@
  * - Deterministic slot ordering
  */
 
-import { SystemTemplate } from '../core/SystemTemplate.js';
-import type { IRng } from '../util/Rng.js';
 import type { ILogger } from '../util/Logger.js';
 import type { IAsyncQueue } from '../util/AsyncQueue.js';
 import { ok, err, type Result } from '../util/Result.js';
@@ -24,7 +22,6 @@ import {
 } from './SaveValidator.js';
 import { InMemorySaveStore } from './SaveStore.js';
 import {
-  type ISaveSystem,
   type ISaveStore,
   type SaveEnvelope,
   type SaveData,
@@ -36,7 +33,7 @@ import {
 const SAVE_VERSION = 'v1' as const;
 const RESERVED_KEYS = new Set<string>(['_payload']); // ✅ Reserved subsystem names
 
-export interface ISaveManager extends ISaveSystem {
+export interface ISaveManager {
   readonly name: string;
   initialize(): Promise<Result<void, Error>>;
   update(deltaTime: number): Promise<Result<void, Error>>;
@@ -51,7 +48,8 @@ export interface ISaveManager extends ISaveSystem {
 /**
  * SaveManager implementation
  */
-export class SaveManager extends SystemTemplate implements ISaveManager {
+export class SaveManager implements ISaveManager {
+  public readonly name = 'Save';
   private readonly queue: IAsyncQueue;
 
   private store: ISaveStore = new InMemorySaveStore();
@@ -60,15 +58,37 @@ export class SaveManager extends SystemTemplate implements ISaveManager {
 
   constructor(
     protected readonly log: ILogger,
-    private readonly rng: IRng
   ) {
-    super({ name: 'Save' });
     this.queue = makeAsyncQueue();
   }
 
+
   // ========================================
-  // Test-Only Debug Hook
+  // Lifecycle
   // ========================================
+
+  public async initialize(): Promise<Result<void, Error>> {
+    try {
+      return await this.queue.run(async () => {
+        this.log.info('save:init', { storeType: this.store.constructor.name });
+        return ok(undefined);
+      });
+    } catch (e: unknown) {
+      const error = e as { name?: string; message?: string };
+      this.log.error('save:init_failed', { error: error?.message });
+      return err(new Error(`Save initialization failed: ${error?.message || 'Unknown error'}`));
+    }
+  }
+
+  public async update(_deltaTime: number): Promise<Result<void, Error>> {
+    // SaveManager doesn't need per-frame updates
+    return ok(undefined);
+  }
+
+  public async destroy(): Promise<void> {
+    // Cleanup resources if needed
+    this.subsystems.clear();
+  }
 
   public getDebugStats(): {
     queuePending: number;
@@ -76,40 +96,11 @@ export class SaveManager extends SystemTemplate implements ISaveManager {
     lastSaveISO: string | null;
   } | undefined {
     if (process.env.NODE_ENV !== 'test') return undefined;
-
-    // ✅ Sync-only (no await in debug hook)
     return {
       queuePending: this.queue.pending,
       registered: this.subsystems.size,
       lastSaveISO: this.lastSaveISO,
     };
-  }
-
-  // ========================================
-  // Lifecycle
-  // ========================================
-
-  public async initialize(
-    signal?: AbortSignal,
-    opts?: { store?: ISaveStore }
-  ): Promise<Result<void, SaveError>> {
-    try {
-      return await this.queue.run(async () => {
-        if (signal?.aborted) return err(SAVE_ERR.Aborted);
-
-        if (opts?.store) {
-          this.store = opts.store;
-        }
-
-        this.log.info('save:init', { storeType: this.store.constructor.name });
-        return ok(undefined);
-      }, { signal });
-    } catch (e: unknown) {
-      const error = e as { name?: string; message?: string };
-      if (error?.name === 'AbortError') return err(SAVE_ERR.Aborted);
-      this.log.error('save:init_failed', { error: error?.message });
-      return err(SAVE_ERR.Internal);
-    }
   }
 
   // ========================================

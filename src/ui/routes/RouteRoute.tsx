@@ -29,7 +29,7 @@ export function RouteRoute(): JSX.Element {
       }
     }
 
-    loadChoices();
+    void loadChoices();
   }, [game]);
 
   // Keyboard navigation

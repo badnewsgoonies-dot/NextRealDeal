@@ -54,10 +54,12 @@ const makeFromGen = (gen: Gen, meta: { seed: number; forks: number; label?: stri
   };
 
   const fork = (childLabel?: string): IRng => {
-    const childGen = g.jump();  // ✅ CRITICAL FIX: Use jumped generator, not original seed
-    g = childGen;  // Advance parent state so next fork gets different stream
+    // Advance the parent generator by consuming some random numbers
+    g.unsafeNext(); g.unsafeNext(); g.unsafeNext(); g.unsafeNext();
     forks += 1;
-    return makeFromGen(g.jump(), { seed, forks: 0, label: childLabel });
+    // Create child with a different seed based on parent state
+    const childSeed = g.unsafeNext() >>> 0;
+    return makeRng(childSeed, childLabel);
   };
 
   const describe = (): { seed: number; forks: number; label?: string } => ({ seed, forks, label });

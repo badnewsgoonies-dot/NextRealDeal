@@ -92,12 +92,21 @@ See [EXAMPLES.md](./EXAMPLES.md) for complete integration examples.
 - ✅ DPR-aware canvas component
 - ✅ GameContext provider
 
-**Coming in v1.1:**
-- ⏳ Battle route canvas rendering
-- ⏳ Combat visualization
-- ⏳ Shop/Inventory UI
+**Route Runner UI (Complete):**
+- ✅ Overview dashboard with KPIs
+- ✅ Runs Manager (CRUD, filter/sort/paginate)
+- ✅ Encounter Explorer (filter/sort/paginate)
+- ✅ Settings (theme toggle)
+- ✅ Battle Screen (isometric, targeting, HUDs)
+- ✅ Dark/Light theme with persistence
+- ✅ Responsive design (mobile-first)
+- ✅ Accessibility (ARIA, focus rings, keyboard nav)
+- ✅ Mock data services with latency/failures
+- ✅ Form validation (Zod schemas)
+- ✅ Toast notifications
+- ✅ Loading/Empty/Error states
 
-**Run UI:** `npm run dev` (opens at http://localhost:3000)
+**Run UI:** `npm run dev` (opens at http://localhost:3001)
 
 ---
 

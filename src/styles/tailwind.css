@@ -1,10 +1,10 @@
+/* Import theme tokens */
+@import '../ui/styles/theme-tokens.css';
+
 /* Tailwind CSS entry point */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import theme tokens */
-@import '../ui/styles/theme-tokens.css';
 
 /* Utility layer for custom focus ring */
 @layer utilities {

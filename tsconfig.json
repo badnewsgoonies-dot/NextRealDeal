@@ -26,6 +26,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "scripts/**/*", "tests/**/*", "examples/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["src/ui/**/*", "src/App.tsx", "src/main.tsx", "node_modules", "dist"]
 }

@@ -1,99 +1,47 @@
-/*
- * GameCanvas: DPR-aware canvas component with letterboxing
- */
-
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 
 interface GameCanvasProps {
-  virtualWidth: number;
-  virtualHeight: number;
-  draw: (ctx: CanvasRenderingContext2D) => void;
-  className?: string;
+  width?: number;   // logical width
+  height?: number;  // logical height
+  onFrame: (ctx: CanvasRenderingContext2D, dtMs: number, w: number, h: number) => void;
 }
 
-export function GameCanvas({
-  virtualWidth,
-  virtualHeight,
-  draw,
-  className = '',
-}: GameCanvasProps): JSX.Element {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+export function GameCanvas({ width = 1280, height = 720, onFrame }: GameCanvasProps): JSX.Element {
+  const ref = React.useRef<HTMLCanvasElement | null>(null);
+  const last = React.useRef<number>(performance.now());
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
+  React.useEffect(() => {
+    const canvas = ref.current!;
+    const ctx = canvas.getContext('2d', { alpha: true })!;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    function resize(): void {
-      if (!canvas || !container || !ctx) return;
-
-      const dpr = window.devicePixelRatio || 1;
-      const containerWidth = container.clientWidth;
-      const containerHeight = container.clientHeight;
-
-      // Calculate letterbox dimensions
-      const aspectRatio = virtualWidth / virtualHeight;
-      const containerAspect = containerWidth / containerHeight;
-
-      let width: number, height: number;
-
-      if (containerAspect > aspectRatio) {
-        // Container wider - letterbox horizontally
-        height = containerHeight;
-        width = height * aspectRatio;
-      } else {
-        // Container taller - letterbox vertically
-        width = containerWidth;
-        height = width / aspectRatio;
-      }
-
-      // Set CSS size
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-
-      // Set buffer size (with DPR)
-      canvas.width = virtualWidth * dpr;
-      canvas.height = virtualHeight * dpr;
-
-      // Scale context
-      ctx.scale(dpr, dpr);
-      
-      // Pixel-perfect rendering
+    function resize() {
+      const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in logical units
       ctx.imageSmoothingEnabled = false;
     }
 
-    // Initial size
     resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
 
-    // Resize observer
-    const observer = new ResizeObserver(resize);
-    observer.observe(container);
-
-    // Render loop
-    function render(): void {
-      if (!ctx) return;
-      draw(ctx);
+    let raf = 0;
+    function loop(t: number) {
+      const dt = t - last.current; last.current = t;
+      onFrame(ctx, dt, width, height);
+      raf = requestAnimationFrame(loop);
     }
+    raf = requestAnimationFrame(loop);
 
-    const rafId = requestAnimationFrame(function loop() {
-      render();
-      requestAnimationFrame(loop);
-    });
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      observer.disconnect();
-    };
-  }, [virtualWidth, virtualHeight, draw]);
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, [onFrame, width, height]);
 
   return (
-    <div ref={containerRef} className={`w-full h-full flex items-center justify-center ${className}`}>
-      <canvas ref={canvasRef} />
+    <div style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center' }}>
+      <canvas ref={ref} style={{ maxWidth: '100%', maxHeight: '100%' }} />
     </div>
   );
 }
-
