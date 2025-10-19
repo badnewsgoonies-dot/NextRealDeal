@@ -1,0 +1,358 @@
+Attached HTML and CSS Context
+
+<button class="px-3 py-2 rounded-md border text-sm border-white/50 bg-white/10 ">Bat</button>
+
+
+/* Matched Rule from user-agent */
+button {
+  appearance: auto;
+}
+
+/* Matched Rule from user-agent */
+input, textarea, select, button {
+  margin-top: 0em;
+  margin-right: 0em;
+  margin-bottom: 0em;
+  margin-left: 0em;
+  text-rendering: auto;
+  color: fieldtext;
+  letter-spacing: normal;
+  word-spacing: normal;
+  line-height: normal;
+  text-transform: none;
+  text-indent: 0px;
+  text-shadow: none;
+  display: inline-block;
+  text-align: start;
+}
+
+/* Matched Rule from user-agent */
+input[type="button" i], input[type="submit" i], input[type="reset" i], input[type="file" i]::-webkit-file-upload-button, button {
+  text-align: center;
+  cursor: default;
+  padding-block-start: 1px;
+  padding-block-end: 1px;
+  padding-inline-start: 6px;
+  padding-inline-end: 6px;
+  border-top-width: 2px;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+  border-top-style: outset;
+  border-right-style: outset;
+  border-bottom-style: outset;
+  border-left-style: outset;
+  border-top-color: buttonborder;
+  border-right-color: buttonborder;
+  border-bottom-color: buttonborder;
+  border-left-color: buttonborder;
+  border-image-source: initial;
+  border-image-slice: initial;
+  border-image-width: initial;
+  border-image-outset: initial;
+  border-image-repeat: initial;
+  box-sizing: border-box;
+  background-color: buttonface;
+  color: buttontext;
+}
+
+/* Matched Rule from regular */
+.border {
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+
+/* Inherited from ancestor level 1 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 1 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+.grid {
+  display: grid;
+  display: grid;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+.grid-cols-6 {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0px, 1fr));
+}
+
+/* Inherited from ancestor level 2 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 2 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+.min-w-\[420px\] {
+  min-width: 420px;
+  min-width: 420px;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+.border {
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+
+/* Inherited from ancestor level 3 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 3 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+.absolute {
+  position: absolute;
+  position: absolute;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+.left-1\/2 {
+  left: calc(1/2 * 100%);
+  left: calc(50%);
+}
+
+/* Inherited from ancestor level 3 (regular) */
+.z-10 {
+  z-index: 10;
+  z-index: 10;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+.-translate-x-1\/2 {
+  --tw-translate-x: calc(calc(1/2 * 100%) * -1);
+  translate: var(--tw-translate-x) var(--tw-translate-y);
+  --tw-translate-x: calc(calc(1/2 * 100%) * -1);
+  translate: var(--tw-translate-x) var(--tw-translate-y);
+}
+
+/* Inherited from ancestor level 4 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 4 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 4 (regular) */
+.relative {
+  position: relative;
+  position: relative;
+}
+
+/* Inherited from ancestor level 4 (regular) */
+.h-full {
+  height: 100%;
+  height: 100%;
+}
+
+/* Inherited from ancestor level 4 (regular) */
+.w-full {
+  width: 100%;
+  width: 100%;
+}
+
+/* Inherited from ancestor level 4 (regular) */
+.overflow-hidden {
+  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Inherited from ancestor level 4 (regular) */
+.bg-\[\#0b1220\] {
+  background-color: #0b1220;
+  background-color: rgb(11, 18, 32);
+}
+
+/* Inherited from ancestor level 4 (regular) */
+.text-\[var\(--text-primary\,white\)\] {
+  color: var(--text-primary,white);
+  color: var(--text-primary,white);
+}
+
+/* Inherited from ancestor level 5 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 5 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 6 (user-agent) */
+article, aside, footer, header, hgroup, main, nav, search, section {
+  display: block;
+}
+
+/* Inherited from ancestor level 6 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 6 (regular) */
+.flex-1 {
+  flex: 1;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0%;
+}
+
+/* Inherited from ancestor level 7 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 7 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 7 (regular) */
+.flex {
+  display: flex;
+  display: flex;
+}
+
+/* Inherited from ancestor level 8 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 8 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100vh;
+}
+
+/* Inherited from ancestor level 9 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 9 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 9 (regular) */
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Inherited from ancestor level 10 (user-agent) */
+body {
+  display: block;
+  margin-top: 8px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  margin-left: 8px;
+}
+
+/* Inherited from ancestor level 10 (regular) */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  margin-left: 0px;
+  padding-top: 0px;
+  padding-right: 0px;
+  padding-bottom: 0px;
+  padding-left: 0px;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Inherited from ancestor level 11 (user-agent) */
+html {
+  display: block;
+}
+
+/* Inherited from ancestor level 11 (user-agent) */
+:root {
+  view-transition-name: root;
+}
+
+/* Inherited from ancestor level 11 (regular) */
+:root {
+  --surface: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a5568;
+  --text-muted: #a0aec0;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --hud-bg: rgba(255, 255, 255, 0.9);
+  --hud-border: rgba(0, 0, 0, 0.1);
+  --bar-bg: rgba(0, 0, 0, 0.08);
+  --surface: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a5568;
+  --text-muted: #a0aec0;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --hud-bg: rgba(255, 255, 255, 0.9);
+  --hud-border: rgba(0, 0, 0, 0.1);
+  --bar-bg: rgba(0, 0, 0, 0.08);
+}
+
+/* Inherited from ancestor level 11 (regular) */
+.dark {
+  --surface: #0b1220;
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e0;
+  --text-muted: #718096;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --hud-bg: rgba(0, 0, 0, 0.6);
+  --hud-border: rgba(255, 255, 255, 0.15);
+  --bar-bg: rgba(255, 255, 255, 0.12);
+  --surface: #0b1220;
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e0;
+  --text-muted: #718096;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --hud-bg: rgba(0, 0, 0, 0.6);
+  --hud-border: rgba(255, 255, 255, 0.15);
+  --bar-bg: rgba(255, 255, 255, 0.12);
+}

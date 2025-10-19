@@ -7,8 +7,10 @@ import { EncounterExplorer } from './ui/pages/EncounterExplorer';
 import { Settings } from './ui/pages/Settings';
 import { Loading } from './ui/components/common/States';
 import { useToast } from './ui/components/common/Toast';
+import { BattleRoute } from './ui/routes/BattleRoute';
+import { DummyAdapter } from './ui/engine/EngineAdapter';
 
-// Lazy load battle route
+// Lazy load old battle screen (keeping for reference)
 const BattleScreen = lazy(() => import('./ui/pages/BattleScreen').then(module => ({ default: module.BattleScreen })));
 
 function AppContent(): React.ReactElement {
@@ -23,7 +25,8 @@ function AppContent(): React.ReactElement {
             <Route path="/runs" element={<RunsManager />} />
             <Route path="/encounters" element={<EncounterExplorer />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/battle" element={<BattleScreen />} />
+            <Route path="/battle" element={<BattleRoute adapter={new DummyAdapter()} />} />
+            <Route path="/battle-old" element={<BattleScreen />} />
           </Routes>
         </Suspense>
       </Layout>

@@ -27,12 +27,14 @@
 **File:** `src/ui/styles/theme-tokens.css`
 
 **Before:**
+
 ```css
 :root { /* light theme variables */ }
 .dark { /* dark theme overrides */ }
 ```
 
 **After:**
+
 ```css
 :root {
   /* Single dark palette */
